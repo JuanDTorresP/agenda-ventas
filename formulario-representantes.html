@@ -28,24 +28,19 @@
   .logo { font-size: 15px; font-weight: 600; color: var(--gray-900); display: flex; align-items: center; gap: 8px; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
   .status-pill { font-size: 12px; padding: 3px 10px; border-radius: 20px; background: var(--green-light); color: var(--green-dark); font-weight: 500; }
-
   .hero { background: #fff; border-bottom: 1px solid var(--gray-100); padding: 2rem 1.5rem 1.5rem; }
   .hero h1 { font-size: 22px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
   .hero p { font-size: 14px; color: var(--gray-500); }
-
   .container { max-width: 560px; margin: 0 auto; padding: 1.5rem 1rem; }
-
   .card {
     background: #fff; border: 1px solid var(--gray-100);
     border-radius: var(--radius); padding: 1.5rem;
     box-shadow: var(--shadow); margin-bottom: 1rem;
   }
   .card-title { font-size: 13px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1.1rem; }
-
   label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-700); margin-bottom: 5px; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
   label .req { color: var(--blue); margin-left: 2px; }
-
   input[type=text], input[type=date], input[type=time], select, textarea {
     width: 100%; padding: 10px 12px; font-size: 14px;
     border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm);
@@ -58,12 +53,13 @@
     box-shadow: 0 0 0 3px rgba(55,138,221,.12);
   }
   textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .row2 label { margin-top: 0; }
   .row2 > div { display: flex; flex-direction: column; }
-
   .tipo-group { display: flex; gap: 10px; margin-top: 5px; }
   .tipo-btn {
     flex: 1; padding: 12px 8px; border: 1.5px solid var(--gray-100);
@@ -76,20 +72,13 @@
   .tipo-btn.active-com { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
   .tipo-btn.active-op { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
   .tipo-icon { font-size: 18px; }
-
   .etapa-wrap {
     overflow: hidden; max-height: 0;
     transition: max-height .3s ease, opacity .3s ease, margin-top .3s ease;
     opacity: 0; margin-top: 0;
   }
-  .etapa-wrap.visible {
-    max-height: 100px; opacity: 1; margin-top: 14px;
-  }
-  .etapa-select {
-    border-left: 3px solid var(--blue) !important;
-    background-color: var(--blue-light) !important;
-  }
-
+  .etapa-wrap.visible { max-height: 120px; opacity: 1; margin-top: 14px; }
+  .etapa-select { border-left: 3px solid var(--blue) !important; background-color: var(--blue-light) !important; }
   .submit-btn {
     width: 100%; padding: 14px; margin-top: 1.25rem;
     background: var(--gray-900); color: #fff;
@@ -101,11 +90,9 @@
   .submit-btn:hover { background: var(--blue-dark); }
   .submit-btn:active { transform: scale(.99); }
   .submit-btn:disabled { background: var(--gray-300); cursor: not-allowed; }
-
   .error-msg { font-size: 12px; color: #C0392B; margin-top: 4px; display: none; }
   .field-err input, .field-err select, .field-err textarea { border-color: #E74C3C; }
   .field-err .error-msg { display: block; }
-
   .success-screen {
     display: none; text-align: center; padding: 3rem 1.5rem;
     background: #fff; border: 1px solid var(--gray-100);
@@ -120,9 +107,7 @@
   .detail-row:last-child { border-bottom: none; }
   .detail-row span:first-child { color: var(--gray-500); }
   .detail-row span:last-child { font-weight: 500; }
-
   .char-count { font-size: 11px; color: var(--gray-300); text-align: right; margin-top: 3px; }
-
   @media (max-width: 480px) {
     .row2 { grid-template-columns: 1fr; }
     .hero { padding: 1.25rem 1rem 1rem; }
@@ -147,9 +132,10 @@
 <div class="container">
 
   <div id="form-wrap">
+
+    <!-- QUIÉN ERES -->
     <div class="card">
       <div class="card-title">¿Quién eres?</div>
-
       <label for="rep">Representante <span class="req">*</span></label>
       <div class="field-wrap" id="wrap-rep">
         <select id="rep">
@@ -163,6 +149,7 @@
       </div>
     </div>
 
+    <!-- DETALLE -->
     <div class="card">
       <div class="card-title">Detalle de la gestión</div>
 
@@ -202,6 +189,19 @@
         <span class="error-msg">Selecciona el tipo de cliente.</span>
       </div>
 
+      <label for="etapa-venta">Etapa de venta <span class="req">*</span></label>
+      <div class="field-wrap" id="wrap-etapa-venta">
+        <select id="etapa-venta">
+          <option value="">— Selecciona la etapa —</option>
+          <option value="Identificado">🔍 Identificado</option>
+          <option value="Seguimiento">🔄 Seguimiento</option>
+          <option value="Cotización">📄 Cotización</option>
+          <option value="Diseño">✏️ Diseño</option>
+          <option value="Negociación">🤝 Negociación</option>
+        </select>
+        <span class="error-msg">Selecciona la etapa de venta.</span>
+      </div>
+
       <label for="oportunidad">Nombre de la oportunidad <span class="req">*</span></label>
       <div class="field-wrap" id="wrap-oportunidad">
         <input type="text" id="oportunidad" placeholder="Ej: Renovación contrato anual, Nueva línea de producto..." autocomplete="off" />
@@ -234,14 +234,14 @@
           <span class="error-msg">Selecciona la etapa comercial.</span>
         </div>
       </div>
+
     </div>
 
+    <!-- NOTAS -->
     <div class="card">
       <div class="card-title">Notas adicionales</div>
-
       <label for="hora">Hora de la visita</label>
       <input type="time" id="hora" />
-
       <label for="notas">Descripción / Notas</label>
       <textarea id="notas" maxlength="500" placeholder="¿Qué pasó en la visita? Acuerdos, pendientes, próximos pasos..." oninput="updateCount()"></textarea>
       <div class="char-count"><span id="char-n">0</span>/500</div>
@@ -258,9 +258,7 @@
     <h2>¡Gestión registrada!</h2>
     <p>Tu actividad quedó guardada y ya se refleja en el dashboard del equipo.</p>
     <div class="detail-box" id="detail-box"></div>
-    <button class="btn-new" onclick="resetForm()">
-      + Registrar otra gestión
-    </button>
+    <button class="btn-new" onclick="resetForm()">+ Registrar otra gestión</button>
   </div>
 
 </div>
@@ -269,17 +267,17 @@
 let tipoSel = '';
 let tipoClienteSel = '';
 
-const now = new Date();
 const pad = n => String(n).padStart(2,'0');
-document.getElementById('fecha').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-document.getElementById('hora').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+const now = new Date();
+document.getElementById('fecha').value = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+document.getElementById('hora').value = pad(now.getHours()) + ':' + pad(now.getMinutes());
 
 function selTipo(t) {
   tipoSel = t;
-  document.getElementById('btn-com').className = 'tipo-btn' + (t==='Comercial' ? ' active-com' : '');
-  document.getElementById('btn-op').className = 'tipo-btn' + (t==='Operativo' ? ' active-op' : '');
+  document.getElementById('btn-com').className = 'tipo-btn' + (t === 'Comercial' ? ' active-com' : '');
+  document.getElementById('btn-op').className = 'tipo-btn' + (t === 'Operativo' ? ' active-op' : '');
   document.getElementById('wrap-tipo').classList.remove('field-err');
-  const etapaWrap = document.getElementById('etapa-wrap');
+  var etapaWrap = document.getElementById('etapa-wrap');
   if (t === 'Comercial') {
     etapaWrap.classList.add('visible');
   } else {
@@ -291,37 +289,38 @@ function selTipo(t) {
 
 function selTipoCliente(t) {
   tipoClienteSel = t;
-  document.getElementById('btn-nuevo').className = 'tipo-btn' + (t==='Nuevo' ? ' active-com' : '');
-  document.getElementById('btn-existente').className = 'tipo-btn' + (t==='Existente' ? ' active-op' : '');
+  document.getElementById('btn-nuevo').className = 'tipo-btn' + (t === 'Nuevo' ? ' active-com' : '');
+  document.getElementById('btn-existente').className = 'tipo-btn' + (t === 'Existente' ? ' active-op' : '');
   document.getElementById('wrap-tipo-cliente').classList.remove('field-err');
 }
 
-
+function updateCount() {
   document.getElementById('char-n').textContent = document.getElementById('notas').value.length;
 }
 
 function validate() {
-  let ok = true;
-  const fields = [
-    { id: 'rep', wrap: 'wrap-rep', check: v => v !== '' },
-    { id: 'ciudad', wrap: 'wrap-ciudad', check: v => v.trim() !== '' },
-    { id: 'fecha', wrap: 'wrap-fecha', check: v => v !== '' },
-    { id: 'cuenta', wrap: 'wrap-cuenta', check: v => v.trim() !== '' },
-    { id: 'oportunidad', wrap: 'wrap-oportunidad', check: v => v.trim() !== '' },
+  var ok = true;
+  var fields = [
+    { id: 'rep', wrap: 'wrap-rep', check: function(v){ return v !== ''; } },
+    { id: 'ciudad', wrap: 'wrap-ciudad', check: function(v){ return v.trim() !== ''; } },
+    { id: 'fecha', wrap: 'wrap-fecha', check: function(v){ return v !== ''; } },
+    { id: 'cuenta', wrap: 'wrap-cuenta', check: function(v){ return v.trim() !== ''; } },
+    { id: 'oportunidad', wrap: 'wrap-oportunidad', check: function(v){ return v.trim() !== ''; } },
+    { id: 'etapa-venta', wrap: 'wrap-etapa-venta', check: function(v){ return v !== ''; } }
   ];
-  fields.forEach(f => {
-    const el = document.getElementById(f.id);
-    const wrap = document.getElementById(f.wrap);
+  fields.forEach(function(f) {
+    var el = document.getElementById(f.id);
+    var wrap = document.getElementById(f.wrap);
     if (!f.check(el.value)) { wrap.classList.add('field-err'); ok = false; }
     else wrap.classList.remove('field-err');
   });
-  if (!tipoSel) { document.getElementById('wrap-tipo').classList.add('field-err'); ok = false; }
-  else document.getElementById('wrap-tipo').classList.remove('field-err');
   if (!tipoClienteSel) { document.getElementById('wrap-tipo-cliente').classList.add('field-err'); ok = false; }
   else document.getElementById('wrap-tipo-cliente').classList.remove('field-err');
+  if (!tipoSel) { document.getElementById('wrap-tipo').classList.add('field-err'); ok = false; }
+  else document.getElementById('wrap-tipo').classList.remove('field-err');
   if (tipoSel === 'Comercial') {
-    const etapa = document.getElementById('etapa');
-    const wEtapa = document.getElementById('wrap-etapa');
+    var etapa = document.getElementById('etapa');
+    var wEtapa = document.getElementById('wrap-etapa');
     if (!etapa.value) { wEtapa.classList.add('field-err'); ok = false; }
     else wEtapa.classList.remove('field-err');
   }
@@ -336,21 +335,22 @@ function setStorage(data) {
   localStorage.setItem('gestiones_agenda', JSON.stringify(data));
 }
 
-async function guardar() {
+function guardar() {
   if (!validate()) {
     document.querySelector('.field-err').scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
-  const btn = document.getElementById('btn-submit');
+  var btn = document.getElementById('btn-submit');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".8s" repeatCount="indefinite"/></circle></svg> Guardando...';
+  btn.textContent = 'Guardando...';
 
-  const g = {
+  var g = {
     id: Date.now(),
     rep: document.getElementById('rep').value,
     ciudad: document.getElementById('ciudad').value.trim(),
     cuenta: document.getElementById('cuenta').value.trim(),
     tipoCliente: tipoClienteSel,
+    etapaVenta: document.getElementById('etapa-venta').value,
     oportunidad: document.getElementById('oportunidad').value.trim(),
     tipo: tipoSel,
     etapa: tipoSel === 'Comercial' ? document.getElementById('etapa').value : '',
@@ -360,29 +360,29 @@ async function guardar() {
     ts: new Date().toISOString()
   };
 
-  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const [fy, fm, fd] = g.fecha.split('-');
-  const fechaLeg = `${parseInt(fd)} ${meses[parseInt(fm)-1]} ${fy}`;
+  var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var partes = g.fecha.split('-');
+  var fechaLeg = parseInt(partes[2]) + ' ' + meses[parseInt(partes[1])-1] + ' ' + partes[0];
 
-  await new Promise(r => setTimeout(r, 600));
+  setTimeout(function() {
+    var data = getStorage();
+    data.unshift(g);
+    setStorage(data);
 
-  const data = getStorage();
-  data.unshift(g);
-  setStorage(data);
+    document.getElementById('detail-box').innerHTML =
+      '<div class="detail-row"><span>Representante</span><span>' + g.rep + '</span></div>' +
+      '<div class="detail-row"><span>Cuenta</span><span>' + g.cuenta + '</span></div>' +
+      '<div class="detail-row"><span>Tipo de cliente</span><span>' + g.tipoCliente + '</span></div>' +
+      '<div class="detail-row"><span>Etapa de venta</span><span>' + g.etapaVenta + '</span></div>' +
+      '<div class="detail-row"><span>Oportunidad</span><span>' + g.oportunidad + '</span></div>' +
+      '<div class="detail-row"><span>Tipo de gestión</span><span>' + g.tipo + (g.etapa ? ' · ' + g.etapa : '') + '</span></div>' +
+      '<div class="detail-row"><span>Ciudad</span><span>' + g.ciudad + '</span></div>' +
+      '<div class="detail-row"><span>Fecha</span><span>' + fechaLeg + (g.hora ? ' · ' + g.hora : '') + '</span></div>';
 
-  document.getElementById('detail-box').innerHTML = `
-    <div class="detail-row"><span>Representante</span><span>${g.rep}</span></div>
-    <div class="detail-row"><span>Cuenta</span><span>${g.cuenta}</span></div>
-    <div class="detail-row"><span>Tipo de cliente</span><span>${g.tipoCliente}</span></div>
-    <div class="detail-row"><span>Oportunidad</span><span>${g.oportunidad}</span></div>
-    <div class="detail-row"><span>Tipo</span><span>${g.tipo}${g.etapa ? ' · ' + g.etapa : ''}</span></div>
-    <div class="detail-row"><span>Ciudad</span><span>${g.ciudad}</span></div>
-    <div class="detail-row"><span>Fecha</span><span>${fechaLeg}${g.hora ? ' · ' + g.hora : ''}</span></div>
-  `;
-
-  document.getElementById('form-wrap').style.display = 'none';
-  document.getElementById('success-screen').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 600);
 }
 
 function resetForm() {
@@ -392,7 +392,10 @@ function resetForm() {
   document.getElementById('oportunidad').value = '';
   document.getElementById('notas').value = '';
   document.getElementById('char-n').textContent = '0';
-  document.getElementById('hora').value = `${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`;
+  var n = new Date();
+  document.getElementById('hora').value = pad(n.getHours()) + ':' + pad(n.getMinutes());
+  document.getElementById('etapa-venta').value = '';
+  document.getElementById('wrap-etapa-venta').classList.remove('field-err');
   document.getElementById('etapa').value = '';
   document.getElementById('etapa-wrap').classList.remove('visible');
   document.getElementById('wrap-etapa').classList.remove('field-err');
@@ -403,6 +406,7 @@ function resetForm() {
   tipoSel = '';
   document.getElementById('btn-com').className = 'tipo-btn';
   document.getElementById('btn-op').className = 'tipo-btn';
+  document.getElementById('wrap-tipo').classList.remove('field-err');
   document.getElementById('success-screen').style.display = 'none';
   document.getElementById('form-wrap').style.display = 'block';
   document.getElementById('btn-submit').disabled = false;
