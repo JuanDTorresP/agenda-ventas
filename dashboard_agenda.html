@@ -359,16 +359,26 @@ function inRange(ds,from,to){ var d=new Date(ds+'T00:00:00'); return d>=from&&d<
 function fmtShort(d){ return d.getDate()+' '+MESES_C[d.getMonth()]; }
 function getMonthKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1); }
 
-function loadData(){
-  try{ gestiones=JSON.parse(localStorage.getItem('gestiones_agenda')||'[]'); }
-  catch(e){ gestiones=[]; }
+function loadData(callback){
+  fetch('https://agendacomercial-7a9e1-default-rtdb.firebaseio.com/gestiones.json')
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    gestiones = [];
+    if(data){
+      Object.keys(data).forEach(function(k){ gestiones.push(data[k]); });
+      gestiones.sort(function(a,b){ return new Date(b.ts)-new Date(a.ts); });
+    }
+    if(callback) callback();
+  })
+  .catch(function(){ gestiones=[]; if(callback) callback(); });
 }
 
 function loadAndRender(){
-  loadData();
-  var active=['semanal','mensual','embudo','cuentas','comparar'].find(function(t){ return document.getElementById('tab-'+t).classList.contains('active'); })||'semanal';
-  renderTab(active);
-  document.querySelectorAll('.updated').forEach(function(el){ el.textContent='Actualizado: '+new Date().toLocaleTimeString('es-CO'); });
+  loadData(function(){
+    var active=['semanal','mensual','embudo','cuentas','comparar'].find(function(t){ return document.getElementById('tab-'+t).classList.contains('active'); })||'semanal';
+    renderTab(active);
+    document.querySelectorAll('.updated').forEach(function(el){ el.textContent='Actualizado: '+new Date().toLocaleTimeString('es-CO'); });
+  });
 }
 
 function showTab(t){
@@ -666,8 +676,7 @@ function cmpKpi(val,lbl,style){
 }
 
 /* ===================== INIT ===================== */
-loadData();
-renderSemanal();
+loadData(function(){ renderSemanal(); });
 setInterval(loadAndRender, 30000);
 </script>
 </body>

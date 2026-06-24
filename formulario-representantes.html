@@ -189,17 +189,30 @@
         <span class="error-msg">Selecciona el tipo de cliente.</span>
       </div>
 
-      <label for="etapa-venta">Etapa de venta <span class="req">*</span></label>
-      <div class="field-wrap" id="wrap-etapa-venta">
-        <select id="etapa-venta">
-          <option value="">— Selecciona la etapa —</option>
-          <option value="Identificado">🔍 Identificado</option>
-          <option value="Seguimiento">🔄 Seguimiento</option>
-          <option value="Cotización">📄 Cotización</option>
-          <option value="Diseño">✏️ Diseño</option>
-          <option value="Negociación">🤝 Negociación</option>
-        </select>
-        <span class="error-msg">Selecciona la etapa de venta.</span>
+      <label>Canal <span class="req">*</span></label>
+      <div class="field-wrap" id="wrap-canal">
+        <div class="tipo-group">
+          <button type="button" class="tipo-btn" id="btn-retail" onclick="selCanal('Retail')">
+            <span class="tipo-icon">🏪</span> Retail
+          </button>
+          <button type="button" class="tipo-btn" id="btn-corporativo" onclick="selCanal('Corporativo')">
+            <span class="tipo-icon">🏢</span> Corporativo
+          </button>
+        </div>
+        <span class="error-msg">Selecciona el canal.</span>
+      </div>
+
+      <label>Modalidad <span class="req">*</span></label>
+      <div class="field-wrap" id="wrap-modalidad">
+        <div class="tipo-group">
+          <button type="button" class="tipo-btn" id="btn-virtual" onclick="selModalidad('Virtual')">
+            <span class="tipo-icon">💻</span> Virtual
+          </button>
+          <button type="button" class="tipo-btn" id="btn-presencial" onclick="selModalidad('Presencial')">
+            <span class="tipo-icon">🤝</span> Presencial
+          </button>
+        </div>
+        <span class="error-msg">Selecciona la modalidad.</span>
       </div>
 
       <label for="oportunidad">Nombre de la oportunidad <span class="req">*</span></label>
@@ -266,6 +279,8 @@
 <script>
 let tipoSel = '';
 let tipoClienteSel = '';
+let canalSel = '';
+let modalidadSel = '';
 
 const pad = n => String(n).padStart(2,'0');
 const now = new Date();
@@ -294,6 +309,20 @@ function selTipoCliente(t) {
   document.getElementById('wrap-tipo-cliente').classList.remove('field-err');
 }
 
+function selCanal(t) {
+  canalSel = t;
+  document.getElementById('btn-retail').className = 'tipo-btn' + (t === 'Retail' ? ' active-com' : '');
+  document.getElementById('btn-corporativo').className = 'tipo-btn' + (t === 'Corporativo' ? ' active-op' : '');
+  document.getElementById('wrap-canal').classList.remove('field-err');
+}
+
+function selModalidad(t) {
+  modalidadSel = t;
+  document.getElementById('btn-virtual').className = 'tipo-btn' + (t === 'Virtual' ? ' active-com' : '');
+  document.getElementById('btn-presencial').className = 'tipo-btn' + (t === 'Presencial' ? ' active-op' : '');
+  document.getElementById('wrap-modalidad').classList.remove('field-err');
+}
+
 function updateCount() {
   document.getElementById('char-n').textContent = document.getElementById('notas').value.length;
 }
@@ -306,7 +335,7 @@ function validate() {
     { id: 'fecha', wrap: 'wrap-fecha', check: function(v){ return v !== ''; } },
     { id: 'cuenta', wrap: 'wrap-cuenta', check: function(v){ return v.trim() !== ''; } },
     { id: 'oportunidad', wrap: 'wrap-oportunidad', check: function(v){ return v.trim() !== ''; } },
-    { id: 'etapa-venta', wrap: 'wrap-etapa-venta', check: function(v){ return v !== ''; } }
+
   ];
   fields.forEach(function(f) {
     var el = document.getElementById(f.id);
@@ -316,6 +345,10 @@ function validate() {
   });
   if (!tipoClienteSel) { document.getElementById('wrap-tipo-cliente').classList.add('field-err'); ok = false; }
   else document.getElementById('wrap-tipo-cliente').classList.remove('field-err');
+  if (!canalSel) { document.getElementById('wrap-canal').classList.add('field-err'); ok = false; }
+  else document.getElementById('wrap-canal').classList.remove('field-err');
+  if (!modalidadSel) { document.getElementById('wrap-modalidad').classList.add('field-err'); ok = false; }
+  else document.getElementById('wrap-modalidad').classList.remove('field-err');
   if (!tipoSel) { document.getElementById('wrap-tipo').classList.add('field-err'); ok = false; }
   else document.getElementById('wrap-tipo').classList.remove('field-err');
   if (tipoSel === 'Comercial') {
@@ -327,13 +360,7 @@ function validate() {
   return ok;
 }
 
-function getStorage() {
-  try { return JSON.parse(localStorage.getItem('gestiones_agenda') || '[]'); } catch(e) { return []; }
-}
-
-function setStorage(data) {
-  localStorage.setItem('gestiones_agenda', JSON.stringify(data));
-}
+var DB_URL = 'https://agendacomercial-7a9e1-default-rtdb.firebaseio.com/gestiones';
 
 function guardar() {
   if (!validate()) {
@@ -350,7 +377,8 @@ function guardar() {
     ciudad: document.getElementById('ciudad').value.trim(),
     cuenta: document.getElementById('cuenta').value.trim(),
     tipoCliente: tipoClienteSel,
-    etapaVenta: document.getElementById('etapa-venta').value,
+    canal: canalSel,
+    modalidad: modalidadSel,
     oportunidad: document.getElementById('oportunidad').value.trim(),
     tipo: tipoSel,
     etapa: tipoSel === 'Comercial' ? document.getElementById('etapa').value : '',
@@ -364,25 +392,32 @@ function guardar() {
   var partes = g.fecha.split('-');
   var fechaLeg = parseInt(partes[2]) + ' ' + meses[parseInt(partes[1])-1] + ' ' + partes[0];
 
-  setTimeout(function() {
-    var data = getStorage();
-    data.unshift(g);
-    setStorage(data);
-
+  fetch(DB_URL + '.json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(g)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function() {
     document.getElementById('detail-box').innerHTML =
       '<div class="detail-row"><span>Representante</span><span>' + g.rep + '</span></div>' +
       '<div class="detail-row"><span>Cuenta</span><span>' + g.cuenta + '</span></div>' +
       '<div class="detail-row"><span>Tipo de cliente</span><span>' + g.tipoCliente + '</span></div>' +
-      '<div class="detail-row"><span>Etapa de venta</span><span>' + g.etapaVenta + '</span></div>' +
+      '<div class="detail-row"><span>Canal</span><span>' + g.canal + '</span></div>' +
+      '<div class="detail-row"><span>Modalidad</span><span>' + g.modalidad + '</span></div>' +
       '<div class="detail-row"><span>Oportunidad</span><span>' + g.oportunidad + '</span></div>' +
       '<div class="detail-row"><span>Tipo de gestión</span><span>' + g.tipo + (g.etapa ? ' · ' + g.etapa : '') + '</span></div>' +
       '<div class="detail-row"><span>Ciudad</span><span>' + g.ciudad + '</span></div>' +
       '<div class="detail-row"><span>Fecha</span><span>' + fechaLeg + (g.hora ? ' · ' + g.hora : '') + '</span></div>';
-
     document.getElementById('form-wrap').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 600);
+  })
+  .catch(function() {
+    alert('Error al guardar. Verifica tu conexión e intenta de nuevo.');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Guardar gestión';
+  });
 }
 
 function resetForm() {
@@ -394,8 +429,14 @@ function resetForm() {
   document.getElementById('char-n').textContent = '0';
   var n = new Date();
   document.getElementById('hora').value = pad(n.getHours()) + ':' + pad(n.getMinutes());
-  document.getElementById('etapa-venta').value = '';
-  document.getElementById('wrap-etapa-venta').classList.remove('field-err');
+  canalSel = '';
+  document.getElementById('btn-retail').className = 'tipo-btn';
+  document.getElementById('btn-corporativo').className = 'tipo-btn';
+  document.getElementById('wrap-canal').classList.remove('field-err');
+  modalidadSel = '';
+  document.getElementById('btn-virtual').className = 'tipo-btn';
+  document.getElementById('btn-presencial').className = 'tipo-btn';
+  document.getElementById('wrap-modalidad').classList.remove('field-err');
   document.getElementById('etapa').value = '';
   document.getElementById('etapa-wrap').classList.remove('visible');
   document.getElementById('wrap-etapa').classList.remove('field-err');
