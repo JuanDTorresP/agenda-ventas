@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carga Masiva — Agenda Comercial</title>
+<style>
+:root{
+  --blue:#378ADD;--blue-dk:#0C447C;--blue-lt:#E6F1FB;
+  --green:#1D9E75;--green-dk:#085041;--green-lt:#E1F5EE;
+  --coral:#D85A30;--coral-lt:#FAECE7;--coral-dk:#712B13;
+  --amber:#BA7517;--amber-lt:#FAEEDA;
+  --gray-50:#F7F7F5;--gray-100:#EDEDEA;--gray-200:#D5D5D0;
+  --gray-400:#A0A09A;--gray-600:#5F5E5A;--gray-900:#1A1A19;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gray-50);color:var(--gray-900)}
+
+.topbar{background:var(--gray-900);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px}
+.brand{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.brand-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+
+.wrap{max-width:960px;margin:0 auto;padding:1.25rem 1rem 4rem;overflow-x:hidden}
+
+.steps{display:flex;gap:6px;margin-bottom:1.25rem}
+.step{flex:1;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;background:var(--gray-100);color:var(--gray-400);text-align:center;transition:all .2s}
+.step.active{background:var(--blue-lt);color:var(--blue-dk)}
+.step.done{background:var(--green-lt);color:var(--green-dk)}
+
+.card{background:#fff;border:1px solid var(--gray-100);border-radius:var(--radius);padding:1.1rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:700;margin-bottom:.3rem}
+.card-sub{font-size:13px;color:var(--gray-400);margin-bottom:1rem;line-height:1.5}
+
+.upload-zone{border:2px dashed var(--gray-200);border-radius:var(--radius);padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:all .2s;background:#fff}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:var(--blue-lt)}
+.upload-zone .icon{font-size:36px;margin-bottom:.6rem}
+.upload-zone p{font-size:13px;color:var(--gray-400)}
+.upload-zone b{color:var(--gray-900)}
+input[type=file]{display:none}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;text-decoration:none}
+.btn-dark{background:var(--gray-900);color:#fff}.btn-dark:hover{background:var(--blue-dk)}
+.btn-gray{background:var(--gray-100);color:var(--gray-600)}.btn-gray:hover{background:var(--gray-200)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:var(--green-dk)}
+.btn:disabled{background:var(--gray-200)!important;color:var(--gray-400)!important;cursor:not-allowed}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+.kpi{background:var(--gray-50);border-radius:8px;padding:.75rem;text-align:center}
+.kpi-n{font-size:20px;font-weight:700}
+.kpi-l{font-size:11px;color:var(--gray-400);margin-top:2px}
+
+.alert{padding:.75rem 1rem;border-radius:8px;font-size:13px;margin-bottom:.75rem;line-height:1.5}
+.alert-warn{background:var(--amber-lt);color:var(--amber)}
+.alert-ok{background:var(--green-lt);color:var(--green-dk)}
+
+.filters{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap;align-items:center}
+.filters select{font-size:12px;padding:5px 8px;border:1px solid var(--gray-100);border-radius:6px;background:#fff;font-family:inherit;color:var(--gray-900)}
+.filters .ct{font-size:12px;color:var(--gray-400);margin-left:auto}
+
+/* TABLA SCROLL */
+.tbl-outer{overflow-x:scroll;overflow-y:visible;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-100);border-radius:8px;margin-bottom:1rem;display:block;width:100%;position:relative}
+.tbl-outer table{border-collapse:collapse;font-size:12px;white-space:nowrap;width:max-content;table-layout:auto}
+.tbl-outer thead th{background:var(--gray-50);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-400);padding:8px 10px;border-bottom:2px solid var(--gray-100);position:sticky;top:0;z-index:2}
+.tbl-outer tbody td{padding:7px 10px;border-bottom:1px solid var(--gray-100);vertical-align:middle;background:#fff}
+.tbl-outer tbody tr:last-child td{border-bottom:none}
+.tbl-outer tbody tr:hover td{background:#fafaf8}
+.tbl-outer tbody tr.excl td{background:#fafafa;opacity:.45}
+
+.cell-in{font-size:12px;padding:4px 7px;border:1.5px solid var(--gray-100);border-radius:5px;background:#fff;font-family:inherit;color:var(--gray-900);transition:border-color .15s}
+.cell-in:focus{outline:none;border-color:var(--blue)}
+.cell-in.err{border-color:#E74C3C;background:#FFF5F5}
+.cell-sel{font-size:12px;padding:4px 7px;border:1.5px solid var(--gray-100);border-radius:5px;background:#fff;font-family:inherit;color:var(--gray-900);min-width:110px}
+.cell-sel:focus{outline:none;border-color:var(--blue)}
+.cell-sel.err{border-color:#E74C3C;background:#FFF5F5}
+input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--coral)}
+
+.progress-bg{height:10px;background:var(--gray-100);border-radius:5px;overflow:hidden;margin:.75rem 0}
+.progress-fg{height:100%;background:var(--green);border-radius:5px;transition:width .3s}
+.log-box{background:var(--gray-50);border-radius:8px;padding:.85rem;max-height:220px;overflow-y:auto;font-size:12px;font-family:monospace;margin-bottom:1rem}
+.log-ok{color:var(--green-dk)}.log-err{color:var(--coral-dk)}.log-info{color:var(--gray-400)}
+
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+
+.scroll-hint{font-size:11px;color:var(--gray-400);text-align:center;padding:4px;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-dot"></span>Carga Masiva — Agenda Comercial</div>
+  <span style="font-size:11px;color:rgba(255,255,255,.45)">Firebase conectado</span>
+</div>
+
+<div class="wrap">
+
+  <div class="steps">
+    <div class="step active" id="s1">1 · Cargar archivo</div>
+    <div class="step" id="s2">2 · Revisar datos</div>
+    <div class="step" id="s3">3 · Subir a Firebase</div>
+  </div>
+
+  <!-- PANEL 1 -->
+  <div id="p1">
+    <div class="card">
+      <div class="card-title">Cargar archivo CSV o Excel</div>
+      <div class="card-sub">Exporta tu calendario de Outlook como CSV y súbelo aquí, o usa la plantilla Excel para ingresar la información manualmente.</div>
+      <div class="upload-zone" id="uz" onclick="document.getElementById('fi').click()" ondragover="ev.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="onDrop(event)">
+        <div class="icon">📂</div>
+        <p><b>Clic aquí</b> o arrastra tu archivo</p>
+        <p style="margin-top:4px">CSV exportado desde Outlook · Excel con plantilla</p>
+      </div>
+      <input type="file" id="fi" accept=".csv,.CSV,.xlsx,.xls" onchange="onFile(this.files[0])">
+      <div style="margin-top:1rem">
+        <button class="btn btn-gray" onclick="dlPlantilla()">⬇ Descargar plantilla Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2 -->
+  <div id="p2" style="display:none">
+    <div class="card">
+      <div class="card-title">Revisar y completar registros</div>
+      <div class="card-sub">Completa los campos marcados en rojo. Marca ✕ para excluir registros que no sean gestiones comerciales.</div>
+      <div class="kpis" id="kpis"></div>
+      <div id="alerta"></div>
+      <div style="display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap">
+        <button class="btn btn-gray" onclick="rows=rows.filter(function(r){return ok(r);});render()" style="font-size:12px;padding:6px 12px">🗑 Eliminar todos los incompletos</button>
+        <button class="btn btn-gray" onclick="if(confirm('¿Eliminar todos los registros?')){rows=[];render();}" style="font-size:12px;padding:6px 12px;color:var(--coral)">🗑 Limpiar todo</button>
+      </div>
+      <div class="filters">
+        <select onchange="setFiltro(this.value)">
+          <option value="">Todos</option>
+          <option value="inc">Solo incompletos</option>
+          <option value="ok">Solo completos</option>
+
+        </select>
+        <select onchange="setRep(this.value)">
+          <option value="">Todos los representantes</option>
+          <option>Patricia Lopera</option>
+          <option>Elizabeth Acosta</option>
+          <option>Ivan Muñoz</option>
+          <option>Clemencia Rodriguez</option>
+        </select>
+        <span class="ct" id="ct"></span>
+      </div>
+      <div class="scroll-hint">← Desliza la tabla hacia los lados para ver todos los campos →</div>
+      <div class="tbl-outer" id="tbl-outer">
+        <table>
+          <thead>
+            <tr>
+              <th>🗑</th><th>#</th><th>Fecha</th><th>Hora</th>
+              <th>Representante</th><th>Cuenta</th><th>Tipo cliente</th>
+              <th>Canal</th><th>Modalidad</th><th>Oportunidad</th>
+              <th>Tipo gestión</th><th>Ciudad</th><th>Notas</th>
+            </tr>
+          </thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-gray" onclick="goP1()">← Otro archivo</button>
+        <button class="btn btn-green" id="btn-go3" onclick="goP3()">Subir a Firebase →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3 -->
+  <div id="p3" style="display:none">
+    <div class="card">
+      <div class="card-title">Subiendo a Firebase</div>
+      <div class="card-sub" id="p3sub"></div>
+      <div class="progress-bg"><div class="progress-fg" id="pfg" style="width:0"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-400);margin-bottom:.75rem">
+        <span id="ptxt">0 de 0</span><span id="ppct">0%</span>
+      </div>
+      <div class="log-box" id="plog"></div>
+      <div class="row-actions">
+        <button class="btn btn-dark" id="btn-start" onclick="startUpload()">🚀 Iniciar carga</button>
+        <button class="btn btn-gray" id="btn-back2" onclick="goP2()">← Volver</button>
+        <button class="btn btn-green" id="btn-dash" style="display:none" onclick="window.open('https://juandtorresp.github.io/agenda-ventas/dashboard_agenda.html','_blank')">Ver Dashboard →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DB='https://agendacomercial-7a9e1-default-rtdb.firebaseio.com/gestiones';
+let rows=[], filtro='', repF='';
+
+/* ---- DRAG & DROP ---- */
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('uz').classList.remove('drag');
+  if(e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]);
+}
+function onFile(f){
+  if(!f) return;
+  var r=new FileReader();
+  r.onload=function(e){ parseCSV(e.target.result); };
+  r.readAsText(f,'UTF-8');
+}
+
+/* ---- CSV PARSE ---- */
+function parseCSV(txt){
+  txt=txt.replace(/^\uFEFF/,'');
+  var lines=txt.split('\n');
+  var hdr=csvLine(lines[0]);
+  var ci={
+    asunto:col(hdr,['Asunto','Subject']),
+    fecha:col(hdr,['Fecha de comienzo','Start Date']),
+    hora:col(hdr,['Comienzo','Start Time']),
+    loc:col(hdr,['Location','Ubicación']),
+    desc:col(hdr,['Description','Descripción']),
+    org:col(hdr,['Meeting Organizer']),
+    req:col(hdr,['Required Attendees'])
+  };
+  rows=[];
+  for(var i=1;i<lines.length;i++){
+    var l=lines[i].trim(); if(!l) continue;
+    var c=csvLine(l); if(c.length<3) continue;
+    var f=fmtFecha(get(c,ci.fecha));
+    if(!f) continue;
+    var asunto=get(c,ci.asunto);
+    var loc=get(c,ci.loc);
+    var desc=(get(c,ci.desc)||'').replace(/\n+/g,' ').trim().substring(0,400);
+    var org=get(c,ci.org); var req=get(c,ci.req);
+    rows.push({
+      id:Date.now()+i,
+      rep:detRep(org+' '+req),
+      ciudad:detCiudad(loc),
+      cuenta:cleanAsunto(asunto),
+      tipoCliente:'',
+      canal:detCanal(org+' '+req),
+      modalidad:detMod(asunto+' '+desc+' '+loc),
+      oportunidad:cleanAsunto(asunto),
+      tipo:detTipo(asunto+' '+desc),
+      fecha:f,
+      hora:fmtHora(get(c,ci.hora)),
+      notas:desc,
+      ts:new Date().toISOString(),
+      excl:false
+    });
+  }
+  if(!rows.length){ alert('No se encontraron registros válidos.'); return; }
+  goP2();
+}
+
+function col(h,ns){ for(var i=0;i<h.length;i++) for(var j=0;j<ns.length;j++) if(h[i].toLowerCase().indexOf(ns[j].toLowerCase())>=0) return i; return -1; }
+function get(c,i){ return i>=0&&i<c.length?c[i]:''; }
+function csvLine(l){
+  var res=[],cur='',q=false;
+  for(var i=0;i<l.length;i++){
+    var ch=l[i];
+    if(ch==='"'){q=!q;}
+    else if(ch===','&&!q){res.push(cur.trim());cur='';}
+    else{cur+=ch;}
+  }
+  res.push(cur.trim()); return res;
+}
+function fmtFecha(s){
+  if(!s) return '';
+  s=s.trim();
+  var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return m[3]+'-'+p2(m[2])+'-'+p2(m[1]);
+  return '';
+}
+function fmtHora(s){
+  if(!s) return '';
+  s=s.replace(/\u00a0|\xa0/g,' ').trim();
+  var pm=s.toLowerCase().indexOf('p')>=0;
+  var am=s.toLowerCase().indexOf('a')>=0;
+  var m=s.match(/(\d+):(\d+)/);
+  if(!m) return '';
+  var h=parseInt(m[1]),mn=m[2];
+  if(pm&&h<12)h+=12; if(am&&h===12)h=0;
+  return p2(h)+':'+mn;
+}
+function p2(n){return String(n).padStart(2,'0');}
+function detRep(t){
+  t=t.toLowerCase();
+  if(t.indexOf('plopera')>=0||t.indexOf('patricia')>=0) return 'Patricia Lopera';
+  if(t.indexOf('eacosta')>=0||t.indexOf('elizabeth')>=0) return 'Elizabeth Acosta';
+  if(t.indexOf('imu')>=0||t.indexOf('ivan')>=0) return 'Ivan Muñoz';
+  if(t.indexOf('crodriguez')>=0||t.indexOf('clemencia')>=0) return 'Clemencia Rodriguez';
+  return '';
+}
+function detTipo(t){
+  t=t.toLowerCase();
+  var op=['cotiz','factur','inventario','tarea','licitac','especif','operativo'];
+  var co=['visita','reuni','cliente','comercial','seguimiento','presentac','lead','venta'];
+  var os=0,cs=0;
+  op.forEach(function(w){if(t.indexOf(w)>=0)os++;});
+  co.forEach(function(w){if(t.indexOf(w)>=0)cs++;});
+  if(os>cs) return 'Operativo';
+  if(cs>0) return 'Comercial';
+  return '';
+}
+function detMod(t){
+  t=t.toLowerCase();
+  if(t.indexOf('teams')>=0||t.indexOf('meet')>=0||t.indexOf('virtual')>=0||t.indexOf('zoom')>=0) return 'Virtual';
+  if(t.indexOf('visita')>=0||t.indexOf('presencial')>=0||t.indexOf('cra ')>=0||t.indexOf('calle')>=0||t.indexOf('oficina')>=0) return 'Presencial';
+  return '';
+}
+function detCanal(t){
+  t=t.toLowerCase();
+  if(t.indexOf('retail')>=0) return 'Retail';
+  if(t.indexOf('corporativo')>=0) return 'Corporativo';
+  return '';
+}
+function detCiudad(s){
+  var t=s.toLowerCase();
+  if(t.indexOf('bogot')>=0||t.indexOf('oficina')>=0) return 'Bogotá';
+  if(t.indexOf('medell')>=0) return 'Medellín';
+  if(t.indexOf('barranquilla')>=0) return 'Barranquilla';
+  if(t.indexOf('cali')>=0) return 'Cali';
+  if(t.indexOf('ch')>=0&&t.indexOf('a')>=0) return 'Chía';
+  return '';
+}
+function cleanAsunto(s){ return s.replace(/^(RV:|RE:|FW:|Fw:|Re:)\s*/i,'').trim(); }
+
+/* ---- UI ---- */
+function goP1(){
+  show('p1');hide('p2');hide('p3');
+  setStep(1);
+}
+function goP2(){
+  hide('p1');show('p2');hide('p3');
+  setStep(2);
+  render();
+}
+function goP3(){
+  var act=rows.filter(function(r){return ok(r);});
+  if(!act.length){alert('No hay registros completos para subir.');return;}
+  hide('p2');show('p3');
+  setStep(3);
+  document.getElementById('p3sub').textContent=act.length+' registros listos para subir';
+  document.getElementById('plog').innerHTML='';
+  document.getElementById('pfg').style.width='0';
+  document.getElementById('ptxt').textContent='0 de '+act.length;
+  document.getElementById('ppct').textContent='0%';
+  document.getElementById('btn-dash').style.display='none';
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-back2').disabled=false;
+}
+function goP2back(){
+  hide('p3');show('p2');
+  setStep(2);
+}
+function show(id){document.getElementById(id).style.display='block';}
+function hide(id){document.getElementById(id).style.display='none';}
+function setStep(n){
+  [1,2,3].forEach(function(i){
+    var el=document.getElementById('s'+i);
+    el.className='step'+(i<n?' done':i===n?' active':'');
+  });
+}
+
+function ok(r){ return r.rep&&r.ciudad&&r.cuenta&&r.tipoCliente&&r.canal&&r.modalidad&&r.oportunidad&&r.tipo&&r.fecha; }
+function setFiltro(v){filtro=v;render();}
+function setRep(v){repF=v;render();}
+
+function render(){
+  var vis=rows.filter(function(r){
+    if(filtro==='inc') return !ok(r);
+    if(filtro==='ok') return ok(r);
+    return true;
+  }).filter(function(r){ return !repF||r.rep===repF; });
+
+  document.getElementById('ct').textContent=vis.length+' registros';
+
+  var completos=rows.filter(function(r){return ok(r);});
+  var incompletos=rows.filter(function(r){return !ok(r);});
+
+  document.getElementById('kpis').innerHTML=
+    kpi(rows.length,'Total','var(--gray-900)')+
+    kpi(completos.length,'Listos para subir','var(--green)')+
+    kpi(incompletos.length,'Incompletos','var(--coral)')+
+    kpi(0,'','var(--gray-400)').replace('>0<','>—<');
+
+  document.getElementById('alerta').innerHTML=incompletos.length>0
+    ?'<div class="alert alert-warn">⚠ <b>'+incompletos.length+' registros incompletos.</b> Completa los campos en rojo, elimina las filas que no apliquen o filtra por "Solo incompletos".</div>'
+    :completos.length>0?'<div class="alert alert-ok">✓ Todos los registros están completos. Listo para subir a Firebase.</div>':'';
+
+  document.getElementById('btn-go3').disabled=completos.length===0;
+
+  var html=vis.map(function(r,i){
+    var ri=rows.indexOf(r);
+    return '<tr class="'+(r.excl?'excl':'')+'">'
+      +'<td><button onclick="rows.splice('+ri+',1);render()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--coral);padding:2px 6px" title="Eliminar fila">🗑</button></td>'
+      +'<td style="color:var(--gray-400)">'+(i+1)+'</td>'
+      +'<td><b>'+r.fecha+'</b></td>'
+      +'<td>'+r.hora+'</td>'
+      +'<td>'+sel(ri,'rep',r.rep,['','Patricia Lopera','Elizabeth Acosta','Ivan Muñoz','Clemencia Rodriguez'])+'</td>'
+      +'<td><input class="cell-in'+(r.cuenta?'':' err')+'" value="'+esc(r.cuenta)+'" style="width:120px" onchange="rows['+ri+'].cuenta=this.value;render()" /></td>'
+      +'<td>'+sel(ri,'tipoCliente',r.tipoCliente,['','Nuevo','Existente'])+'</td>'
+      +'<td>'+sel(ri,'canal',r.canal,['','Retail','Corporativo'])+'</td>'
+      +'<td>'+sel(ri,'modalidad',r.modalidad,['','Virtual','Presencial'])+'</td>'
+      +'<td><input class="cell-in'+(r.oportunidad?'':' err')+'" value="'+esc(r.oportunidad)+'" style="width:140px" onchange="rows['+ri+'].oportunidad=this.value;render()" /></td>'
+      +'<td>'+sel(ri,'tipo',r.tipo,['','Comercial','Operativo'])+'</td>'
+      +'<td><input class="cell-in'+(r.ciudad?'':' err')+'" value="'+esc(r.ciudad)+'" style="width:90px" onchange="rows['+ri+'].ciudad=this.value;render()" /></td>'
+      +'<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;color:var(--gray-400)" title="'+esc(r.notas)+'">'+esc(r.notas.substring(0,50))+'</td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('tb').innerHTML=html||'<tr><td colspan="13" style="text-align:center;padding:2rem;color:var(--gray-400)">Sin registros</td></tr>';
+}
+
+function kpi(n,l,c){ return '<div class="kpi"><div class="kpi-n" style="color:'+c+'">'+n+'</div><div class="kpi-l">'+l+'</div></div>'; }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sel(ri,field,val,opts){
+  var err=!val?' err':'';
+  var o=opts.map(function(v){return '<option value="'+v+'"'+(v===val?' selected':'')+'>'+( v||'— —')+'</option>';}).join('');
+  return '<select class="cell-sel'+err+'" onchange="rows['+ri+'].'+field+'=this.value;render()">'+o+'</select>';
+}
+
+/* ---- UPLOAD ---- */
+async function startUpload(){
+  document.getElementById('btn-start').disabled=true;
+  document.getElementById('btn-back2').disabled=true;
+  var act=rows.filter(function(r){return ok(r);});
+  var log=document.getElementById('plog');
+  var good=0,bad=0;
+  for(var i=0;i<act.length;i++){
+    var r=act[i];
+    var pct=Math.round((i+1)/act.length*100);
+    document.getElementById('pfg').style.width=pct+'%';
+    document.getElementById('ptxt').textContent=(i+1)+' de '+act.length;
+    document.getElementById('ppct').textContent=pct+'%';
+    try{
+      var res=await fetch(DB+'.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,rep:r.rep,ciudad:r.ciudad,cuenta:r.cuenta,tipoCliente:r.tipoCliente,canal:r.canal,modalidad:r.modalidad,oportunidad:r.oportunidad,tipo:r.tipo,etapa:'',fecha:r.fecha,hora:r.hora,notas:r.notas,ts:r.ts})});
+      if(res.ok){good++;log.innerHTML+='<div class="log-ok">✓ '+r.fecha+' · '+r.rep+' · '+r.cuenta+'</div>';}
+      else{bad++;log.innerHTML+='<div class="log-err">✗ Error: '+r.cuenta+'</div>';}
+    }catch(e){bad++;log.innerHTML+='<div class="log-err">✗ Sin conexión: '+r.cuenta+'</div>';}
+    log.scrollTop=log.scrollHeight;
+    await new Promise(function(r){setTimeout(r,120);});
+  }
+  log.innerHTML+='<div class="log-info" style="margin-top:8px;font-weight:700">Finalizado: '+good+' subidos, '+bad+' errores</div>';
+  document.getElementById('p3sub').textContent='Carga completa — '+good+' registros en Firebase';
+  document.getElementById('btn-dash').style.display='inline-flex';
+  document.getElementById('btn-back2').disabled=false;
+}
+
+/* ---- PLANTILLA ---- */
+function dlPlantilla(){
+  var csv='representante,ciudad,cuenta,tipoCliente,canal,modalidad,oportunidad,tipo,fecha,hora,notas\n'
+    +'Patricia Lopera,Bogotá,Empresa ABC,Nuevo,Corporativo,Presencial,Renovación contrato,Comercial,2026-06-01,09:00,Reunión inicial\n'
+    +'Elizabeth Acosta,Medellín,Empresa XYZ,Existente,Retail,Virtual,Seguimiento propuesta,Comercial,2026-06-02,10:30,Revisión propuesta\n';
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='plantilla-carga-masiva.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
