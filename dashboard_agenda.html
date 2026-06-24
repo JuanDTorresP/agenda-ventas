@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Comercial — Gestión del Equipo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --blue: #378ADD; --blue-dk: #0C447C; --blue-lt: #E6F1FB;
+    --green: #1D9E75; --green-dk: #085041; --green-lt: #E1F5EE;
+    --purple: #7F77DD; --purple-lt: #EEEDFE; --purple-dk: #3C3489;
+    --coral: #D85A30; --coral-lt: #FAECE7; --coral-dk: #712B13;
+    --gray-50: #F7F7F5; --gray-100: #EDEDEA; --gray-200: #D5D5D0;
+    --gray-400: #A0A09A; --gray-600: #5F5E5A; --gray-900: #1A1A19;
+    --radius: 12px; --radius-sm: 7px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-50); color: var(--gray-900); }
+
+  .topbar {
+    background: var(--gray-900); color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 56px; position: sticky; top: 0; z-index: 20;
+  }
+  .topbar-brand { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .topbar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .live-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(29,158,117,.25); color: #5DCAA5; font-weight: 600; }
+  .refresh-btn { background: rgba(255,255,255,.1); border: none; color: #fff; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; font-family: inherit; }
+  .refresh-btn:hover { background: rgba(255,255,255,.2); }
+
+  .nav {
+    background: #fff; border-bottom: 1px solid var(--gray-100);
+    display: flex; align-items: center; padding: 0 2rem; gap: 4px;
+  }
+  .nav-tab {
+    padding: 14px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; background: none; color: var(--gray-400);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: inherit; display: flex; align-items: center; gap: 6px;
+    transition: color .15s;
+  }
+  .nav-tab:hover { color: var(--gray-600); }
+  .nav-tab.active { color: var(--gray-900); border-bottom-color: var(--gray-900); }
+  .nav-tab svg { opacity: .6; }
+  .nav-tab.active svg { opacity: 1; }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 1.75rem 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px; }
+  .page-title { font-size: 18px; font-weight: 700; }
+  .page-sub { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  select.ctrl { padding: 7px 32px 7px 10px; font-size: 13px; border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm); background: #fff; color: var(--gray-900); font-family: inherit; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+  select.ctrl:focus { outline: none; border-color: var(--blue); }
+  .month-nav { display: flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm); padding: 4px; }
+  .month-nav button { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 5px; color: var(--gray-600); font-family: inherit; font-size: 13px; }
+  .month-nav button:hover { background: var(--gray-50); }
+  .month-nav span { font-size: 13px; font-weight: 600; min-width: 110px; text-align: center; color: var(--gray-900); }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .kpi { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+  .kpi-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); margin-bottom: 6px; }
+  .kpi-val { font-size: 28px; font-weight: 700; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--gray-400); margin-top: 5px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 700px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1.25rem; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .card-sub { font-size: 12px; color: var(--gray-400); }
+
+  .rep-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1.1rem; }
+  .rep-top { display: flex; align-items: center; gap: 10px; margin-bottom: .9rem; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .rep-name { font-size: 13px; font-weight: 600; }
+  .rep-count { font-size: 12px; color: var(--gray-400); }
+  .mini-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: .75rem; }
+  .mini { background: var(--gray-50); border-radius: 6px; padding: 6px 8px; text-align: center; }
+  .mini-n { font-size: 15px; font-weight: 700; }
+  .mini-l { font-size: 10px; color: var(--gray-400); margin-top: 1px; }
+  .prog-bar { height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; }
+  .prog-inner { height: 100%; border-radius: 3px; transition: width .5s ease; }
+  .prog-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--gray-400); margin-top: 3px; }
+  .last-visit { font-size: 11px; color: var(--gray-400); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--gray-100); }
+  .last-visit b { color: var(--gray-600); font-weight: 600; }
+
+  .legend { display: flex; gap: 14px; margin-bottom: .85rem; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--gray-600); }
+  .leg-sq { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .delta-table { width: 100%; border-collapse: collapse; }
+  .delta-table tr { border-bottom: 1px solid var(--gray-100); }
+  .delta-table tr:last-child { border-bottom: none; }
+  .delta-table td { padding: 8px 0; font-size: 13px; vertical-align: middle; }
+  .delta-table td:first-child { color: var(--gray-600); }
+  .delta-table td:last-child { text-align: right; }
+  .delta-val { font-weight: 600; }
+  .chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-left: 6px; }
+  .chip-up { background: var(--green-lt); color: var(--green-dk); }
+  .chip-dn { background: var(--coral-lt); color: var(--coral-dk); }
+  .chip-eq { background: var(--gray-100); color: var(--gray-600); }
+
+  .cmp-head { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .cmp-month { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1.1rem; }
+  .cmp-month-title { font-size: 14px; font-weight: 700; margin-bottom: .85rem; color: var(--gray-900); }
+  .cmp-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cmp-kpi { background: var(--gray-50); border-radius: 7px; padding: 8px 10px; }
+  .cmp-kpi-n { font-size: 20px; font-weight: 700; }
+  .cmp-kpi-l { font-size: 10px; color: var(--gray-400); margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
+
+  .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--gray-400); }
+  .empty-state svg { margin-bottom: 1rem; opacity: .35; }
+  .empty-state p { font-size: 14px; }
+
+  .last-updated { font-size: 11px; color: var(--gray-400); text-align: right; margin-top: .5rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="topbar-dot"></span>
+    Dashboard Comercial
+  </div>
+  <div class="topbar-right">
+    <span class="live-badge">● EN VIVO</span>
+    <button class="refresh-btn" onclick="loadAndRender()">↻ Actualizar</button>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showTab('semanal')" id="nt-semanal">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Semana actual
+  </button>
+  <button class="nav-tab" onclick="showTab('mensual')" id="nt-mensual">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+    Reporte mensual
+  </button>
+  <button class="nav-tab" onclick="showTab('comparar')" id="nt-comparar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Comparar meses
+  </button>
+</nav>
+
+<main class="main">
+
+  <!-- SEMANAL -->
+  <div class="section active" id="tab-semanal">
+    <div class="page-header">
+      <div><div class="page-title" id="sem-title">Semana actual</div><div class="page-sub" id="sem-sub"></div></div>
+      <div class="controls">
+        <select class="ctrl" id="sem-rep" onchange="renderSemanal()">
+          <option value="">Todo el equipo</option>
+          <option>Patricia Lopera</option><option>Elizabeth Acosta</option>
+          <option>Ivan Muñoz</option><option>Clemencia Rodriguez</option>
+        </select>
+      </div>
+    </div>
+    <div class="kpi-row" id="sem-kpis"></div>
+    <div class="grid2 grid2-reps" id="sem-rep-cards"></div>
+    <div class="card" id="sem-chart-card" style="margin-bottom:1rem">
+      <div class="card-head"><span class="card-title">Actividad diaria</span>
+        <div class="legend"><span class="leg"><span class="leg-sq" style="background:var(--blue)"></span>Comercial</span><span class="leg"><span class="leg-sq" style="background:var(--green)"></span>Operativo</span></div>
+      </div>
+      <div style="position:relative;height:220px"><canvas id="chart-sem" role="img" aria-label="Gestiones por día de la semana"></canvas></div>
+    </div>
+    <div class="last-updated" id="sem-updated"></div>
+  </div>
+
+  <!-- MENSUAL -->
+  <div class="section" id="tab-mensual">
+    <div class="page-header">
+      <div><div class="page-title">Reporte mensual</div><div class="page-sub" id="men-sub"></div></div>
+      <div class="controls">
+        <div class="month-nav">
+          <button onclick="changeMonth(-1)">&#8592;</button>
+          <span id="men-label"></span>
+          <button onclick="changeMonth(1)">&#8594;</button>
+        </div>
+        <select class="ctrl" id="men-rep" onchange="renderMensual()">
+          <option value="">Todo el equipo</option>
+          <option>Patricia Lopera</option><option>Elizabeth Acosta</option>
+          <option>Ivan Muñoz</option><option>Clemencia Rodriguez</option>
+        </select>
+      </div>
+    </div>
+    <div class="kpi-row" id="men-kpis"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Gestiones por semana</span>
+          <div class="legend"><span class="leg"><span class="leg-sq" style="background:var(--blue)"></span>Comercial</span><span class="leg"><span class="leg-sq" style="background:var(--green)"></span>Operativo</span></div>
+        </div>
+        <div style="position:relative;height:220px"><canvas id="chart-men-sem" role="img" aria-label="Gestiones semanales del mes"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Por representante</span>
+          <div class="legend"><span class="leg"><span class="leg-sq" style="background:var(--blue)"></span>Comercial</span><span class="leg"><span class="leg-sq" style="background:var(--green)"></span>Operativo</span></div>
+        </div>
+        <div style="position:relative;height:220px"><canvas id="chart-men-rep" role="img" aria-label="Gestiones por representante en el mes"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-head"><span class="card-title">Top cuentas del mes</span></div>
+      <div id="men-cuentas"></div>
+    </div>
+  </div>
+
+  <!-- COMPARAR -->
+  <div class="section" id="tab-comparar">
+    <div class="page-header">
+      <div><div class="page-title">Comparación de meses</div><div class="page-sub">Analiza la evolución del equipo en el tiempo</div></div>
+      <div class="controls">
+        <select class="ctrl" id="cmp-m1" onchange="renderComparar()"></select>
+        <span style="font-size:13px;color:var(--gray-400);font-weight:600">vs</span>
+        <select class="ctrl" id="cmp-m2" onchange="renderComparar()"></select>
+        <select class="ctrl" id="cmp-rep" onchange="renderComparar()">
+          <option value="">Todo el equipo</option>
+          <option>Patricia Lopera</option><option>Elizabeth Acosta</option>
+          <option>Ivan Muñoz</option><option>Clemencia Rodriguez</option>
+        </select>
+      </div>
+    </div>
+    <div class="cmp-head" id="cmp-heads"></div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-head"><span class="card-title">Diferencias clave</span></div>
+      <table class="delta-table" id="delta-table"></table>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-head"><span class="card-title">Gestiones por representante</span>
+        <div class="legend" id="cmp-legend"></div>
+      </div>
+      <div style="position:relative;height:240px"><canvas id="chart-cmp" role="img" aria-label="Comparación por representante entre dos meses"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">Comercial vs Operativo — ambos meses</span></div>
+      <div style="position:relative;height:200px"><canvas id="chart-cmp-tipo" role="img" aria-label="Comparación tipo de gestión entre dos meses"></canvas></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const REPS = ['Patricia Lopera','Elizabeth Acosta','Ivan Muñoz','Clemencia Rodriguez'];
+const REP_BG = ['#E6F1FB','#E1F5EE','#EEEDFE','#FAECE7'];
+const REP_TXT = ['#0C447C','#085041','#3C3489','#712B13'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_C = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let gestiones = [];
+let curMonth = new Date().getMonth(), curYear = new Date().getFullYear();
+const charts = {};
+
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+function loadData(){
+  try { gestiones = JSON.parse(localStorage.getItem('gestiones_agenda') || '[]'); }
+  catch(e){ gestiones = []; }
+}
+
+function loadAndRender(){
+  loadData();
+  const t = ['semanal','mensual','comparar'].find(t=>document.getElementById('tab-'+t).classList.contains('active')) || 'semanal';
+  if(t==='semanal') renderSemanal();
+  if(t==='mensual') renderMensual();
+  if(t==='comparar') renderComparar();
+  document.querySelectorAll('.last-updated').forEach(el=>{ el.textContent='Actualizado: '+new Date().toLocaleTimeString('es-CO'); });
+}
+
+function showTab(t){
+  ['semanal','mensual','comparar'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    document.getElementById('nt-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='semanal') renderSemanal();
+  if(t==='mensual') renderMensual();
+  if(t==='comparar'){ fillMonthSelects(); renderComparar(); }
+}
+
+function getWeekRange(){
+  const now=new Date(); const day=now.getDay();
+  const mon=new Date(now); mon.setDate(now.getDate()-(day===0?6:day-1)); mon.setHours(0,0,0,0);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
+  return{mon,sun};
+}
+function inRange(ds,from,to){ const d=new Date(ds+'T00:00:00'); return d>=from&&d<=to; }
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtShort(d){ return `${d.getDate()} ${MESES_C[d.getMonth()]}`; }
+function dsOf(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+function renderSemanal(){
+  const {mon,sun}=getWeekRange();
+  const repF=document.getElementById('sem-rep').value;
+  let all=gestiones.filter(g=>inRange(g.fecha,mon,sun));
+  if(repF) all=all.filter(g=>g.rep===repF);
+  const com=all.filter(g=>g.tipo==='Comercial').length;
+  const op=all.filter(g=>g.tipo==='Operativo').length;
+  const cuentas=new Set(all.map(g=>g.cuenta)).size;
+
+  document.getElementById('sem-sub').textContent=`${fmtShort(mon)} — ${fmtShort(sun)}, ${sun.getFullYear()}`;
+  document.getElementById('sem-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Total gestiones</div><div class="kpi-val">${all.length}</div><div class="kpi-sub">esta semana</div></div>
+    <div class="kpi"><div class="kpi-lbl">Comercial</div><div class="kpi-val" style="color:#185FA5">${com}</div><div class="kpi-sub">${all.length?Math.round(com/all.length*100):0}% del total</div></div>
+    <div class="kpi"><div class="kpi-lbl">Operativo</div><div class="kpi-val" style="color:#0F6E56">${op}</div><div class="kpi-sub">${all.length?Math.round(op/all.length*100):0}% del total</div></div>
+    <div class="kpi"><div class="kpi-lbl">Cuentas únicas</div><div class="kpi-val">${cuentas}</div><div class="kpi-sub">visitadas</div></div>`;
+
+  const repsToShow = repF ? REPS.filter(r=>r===repF) : REPS;
+  document.getElementById('sem-rep-cards').innerHTML=repsToShow.map((rep,idx)=>{
+    const i=REPS.indexOf(rep);
+    const rd=all.filter(g=>g.rep===rep);
+    const rc=rd.filter(g=>g.tipo==='Comercial').length;
+    const ro=rd.filter(g=>g.tipo==='Operativo').length;
+    const pct=rd.length?Math.round(rc/rd.length*100):0;
+    const init=rep.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const last=rd[0];
+    return `<div class="rep-card">
+      <div class="rep-top">
+        <div class="avatar" style="background:${REP_BG[i]};color:${REP_TXT[i]}">${init}</div>
+        <div><div class="rep-name">${rep}</div><div class="rep-count">${rd.length} gestión${rd.length!==1?'es':''} esta semana</div></div>
+      </div>
+      <div class="mini-row">
+        <div class="mini"><div class="mini-n" style="color:#185FA5">${rc}</div><div class="mini-l">Comercial</div></div>
+        <div class="mini"><div class="mini-n" style="color:#0F6E56">${ro}</div><div class="mini-l">Operativo</div></div>
+        <div class="mini"><div class="mini-n">${new Set(rd.map(g=>g.cuenta)).size}</div><div class="mini-l">Cuentas</div></div>
+      </div>
+      <div class="prog-bar"><div class="prog-inner" style="width:${pct}%;background:#378ADD"></div></div>
+      <div class="prog-labels"><span style="color:#185FA5">Comercial ${pct}%</span><span style="color:#0F6E56">Operativo ${100-pct}%</span></div>
+      ${last?`<div class="last-visit">Última gestión: <b>${last.cuenta}</b> · ${last.fecha}${last.hora?' · '+last.hora:''}</div>`:'<div class="last-visit" style="color:#D0D0CA">Sin registros esta semana</div>'}
+    </div>`;
+  }).join('');
+
+  const days=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const comD=days.map((_,di)=>{ const d=new Date(mon);d.setDate(mon.getDate()+di); return all.filter(g=>g.fecha===dsOf(d)&&g.tipo==='Comercial').length; });
+  const opD=days.map((_,di)=>{ const d=new Date(mon);d.setDate(mon.getDate()+di); return all.filter(g=>g.fecha===dsOf(d)&&g.tipo==='Operativo').length; });
+  destroyChart('sem');
+  charts['sem']=new Chart(document.getElementById('chart-sem'),{
+    type:'bar',
+    data:{labels:days,datasets:[
+      {label:'Comercial',data:comD,backgroundColor:'#378ADD',borderRadius:5,borderSkipped:false},
+      {label:'Operativo',data:opD,backgroundColor:'#1D9E75',borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:12}}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}}}
+  });
+}
+
+function changeMonth(d){
+  curMonth+=d; if(curMonth<0){curMonth=11;curYear--;} if(curMonth>11){curMonth=0;curYear++;}
+  renderMensual();
+}
+
+function renderMensual(){
+  const label=`${MESES[curMonth]} ${curYear}`;
+  document.getElementById('men-label').textContent=label;
+  const repF=document.getElementById('men-rep').value;
+  const from=new Date(curYear,curMonth,1), to=new Date(curYear,curMonth+1,0,23,59,59);
+  let data=gestiones.filter(g=>inRange(g.fecha,from,to));
+  if(repF) data=data.filter(g=>g.rep===repF);
+  const com=data.filter(g=>g.tipo==='Comercial').length;
+  const op=data.filter(g=>g.tipo==='Operativo').length;
+  const cuentas=new Set(data.map(g=>g.cuenta)).size;
+  document.getElementById('men-sub').textContent=`${label} · ${data.length} gestiones registradas`;
+  document.getElementById('men-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Total</div><div class="kpi-val">${data.length}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Comercial</div><div class="kpi-val" style="color:#185FA5">${com}</div><div class="kpi-sub">${data.length?Math.round(com/data.length*100):0}%</div></div>
+    <div class="kpi"><div class="kpi-lbl">Operativo</div><div class="kpi-val" style="color:#0F6E56">${op}</div><div class="kpi-sub">${data.length?Math.round(op/data.length*100):0}%</div></div>
+    <div class="kpi"><div class="kpi-lbl">Cuentas únicas</div><div class="kpi-val">${cuentas}</div></div>`;
+
+  const semanas=[];
+  let d=new Date(from);
+  while(d<=to){ const ws=new Date(d),we=new Date(d);we.setDate(d.getDate()+6);if(we>to)we.setTime(to.getTime());semanas.push({ws,we});d.setDate(d.getDate()+7); }
+  const semCom=semanas.map(s=>data.filter(g=>inRange(g.fecha,s.ws,s.we)&&g.tipo==='Comercial').length);
+  const semOp=semanas.map(s=>data.filter(g=>inRange(g.fecha,s.ws,s.we)&&g.tipo==='Operativo').length);
+  destroyChart('men-sem');
+  charts['men-sem']=new Chart(document.getElementById('chart-men-sem'),{
+    type:'bar',
+    data:{labels:semanas.map((_,i)=>`Sem ${i+1}`),datasets:[
+      {label:'Comercial',data:semCom,backgroundColor:'#378ADD',borderRadius:5,borderSkipped:false},
+      {label:'Operativo',data:semOp,backgroundColor:'#1D9E75',borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}}}
+  });
+
+  const repData=REPS.map(r=>({r,com:data.filter(g=>g.rep===r&&g.tipo==='Comercial').length,op:data.filter(g=>g.rep===r&&g.tipo==='Operativo').length}));
+  destroyChart('men-rep');
+  charts['men-rep']=new Chart(document.getElementById('chart-men-rep'),{
+    type:'bar',
+    data:{labels:REPS.map(r=>r.split(' ')[0]),datasets:[
+      {label:'Comercial',data:repData.map(s=>s.com),backgroundColor:'#378ADD',borderRadius:5,borderSkipped:false},
+      {label:'Operativo',data:repData.map(s=>s.op),backgroundColor:'#1D9E75',borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}}}
+  });
+
+  const cuentaStats=[...new Set(data.map(g=>g.cuenta))].map(c=>({c,tot:data.filter(g=>g.cuenta===c).length,com:data.filter(g=>g.cuenta===c&&g.tipo==='Comercial').length})).sort((a,b)=>b.tot-a.tot).slice(0,6);
+  const maxC=Math.max(...cuentaStats.map(s=>s.tot),1);
+  document.getElementById('men-cuentas').innerHTML=cuentaStats.length?cuentaStats.map(s=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:12px;color:var(--gray-600);width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0">${s.c}</span>
+      <div style="flex:1;height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden">
+        <div style="height:100%;display:flex">
+          <div style="width:${Math.round(s.com/maxC*100)}%;background:#378ADD;border-radius:4px 0 0 4px"></div>
+          <div style="width:${Math.round((s.tot-s.com)/maxC*100)}%;background:#1D9E75"></div>
+        </div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:var(--gray-900);width:20px;text-align:right">${s.tot}</span>
+    </div>`).join(''):`<div style="color:var(--gray-400);font-size:13px;text-align:center;padding:1.5rem">Sin datos este mes</div>`;
+}
+
+function getMonthKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+function fillMonthSelects(){
+  const keys=new Set();
+  gestiones.forEach(g=>{ const d=new Date(g.fecha+'T00:00:00'); keys.add(getMonthKey(d)); });
+  const now=new Date(); keys.add(getMonthKey(now));
+  const prev=new Date(now); prev.setMonth(prev.getMonth()-1); keys.add(getMonthKey(prev));
+  const sorted=[...keys].sort().reverse();
+  const s1=document.getElementById('cmp-m1'),s2=document.getElementById('cmp-m2');
+  const p1=s1.value,p2=s2.value;
+  const opts=sorted.map(k=>{ const[y,m]=k.split('-'); return `<option value="${k}">${MESES[parseInt(m)-1]} ${y}</option>`; }).join('');
+  s1.innerHTML=opts; s2.innerHTML=opts;
+  if(p1&&sorted.includes(p1)) s1.value=p1; else s1.value=sorted[0]||'';
+  if(p2&&sorted.includes(p2)) s2.value=p2; else s2.value=sorted[1]||sorted[0]||'';
+}
+
+function getMonthStats(ym, repF){
+  const[y,m]=ym.split('-').map(Number);
+  const from=new Date(y,m-1,1), to=new Date(y,m,0,23,59,59);
+  let d=gestiones.filter(g=>inRange(g.fecha,from,to));
+  if(repF) d=d.filter(g=>g.rep===repF);
+  return{ total:d.length, com:d.filter(g=>g.tipo==='Comercial').length, op:d.filter(g=>g.tipo==='Operativo').length, cuentas:new Set(d.map(g=>g.cuenta)).size, repTots:REPS.map(r=>d.filter(g=>g.rep===r).length) };
+}
+
+function renderComparar(){
+  fillMonthSelects();
+  const m1=document.getElementById('cmp-m1').value, m2=document.getElementById('cmp-m2').value;
+  const repF=document.getElementById('cmp-rep').value;
+  const s1=getMonthStats(m1,repF), s2=getMonthStats(m2,repF);
+  const lbl=ym=>{ const[y,mo]=ym.split('-'); return `${MESES[parseInt(mo)-1]} ${y}`; };
+  const l1=lbl(m1), l2=lbl(m2);
+
+  document.getElementById('cmp-heads').innerHTML=[{s:s1,l:l1},{s:s2,l:l2}].map(({s,l})=>`
+    <div class="cmp-month">
+      <div class="cmp-month-title">${l}</div>
+      <div class="cmp-kpis">
+        <div class="cmp-kpi"><div class="cmp-kpi-n">${s.total}</div><div class="cmp-kpi-l">Total</div></div>
+        <div class="cmp-kpi"><div class="cmp-kpi-n" style="color:#185FA5">${s.com}</div><div class="cmp-kpi-l">Comercial</div></div>
+        <div class="cmp-kpi"><div class="cmp-kpi-n" style="color:#0F6E56">${s.op}</div><div class="cmp-kpi-l">Operativo</div></div>
+        <div class="cmp-kpi"><div class="cmp-kpi-n">${s.cuentas}</div><div class="cmp-kpi-l">Cuentas</div></div>
+      </div>
+    </div>`).join('');
+
+  function chipHtml(v1,v2){ const d=v1-v2; return d>0?`<span class="chip chip-up">+${d}</span>`:d<0?`<span class="chip chip-dn">${d}</span>`:`<span class="chip chip-eq">= igual</span>`; }
+  const rows=[['Total gestiones',s1.total,s2.total],['Gestión comercial',s1.com,s2.com],['Gestión operativa',s1.op,s2.op],['Cuentas únicas',s1.cuentas,s2.cuentas]];
+  document.getElementById('delta-table').innerHTML=rows.map(([lbl,v1,v2])=>`<tr><td>${lbl}</td><td><span class="delta-val">${v1}</span> <span style="color:var(--gray-400);font-size:12px">vs ${v2}</span>${chipHtml(v1,v2)}</td></tr>`).join('');
+
+  document.getElementById('cmp-legend').innerHTML=`
+    <span class="leg"><span class="leg-sq" style="background:#378ADD"></span>${l1}</span>
+    <span class="leg"><span class="leg-sq" style="background:#378ADD;opacity:.35;border:1px dashed #378ADD"></span>${l2}</span>`;
+
+  destroyChart('cmp');
+  charts['cmp']=new Chart(document.getElementById('chart-cmp'),{
+    type:'bar',
+    data:{labels:REPS.map(r=>r.split(' ')[0]),datasets:[
+      {label:l1,data:s1.repTots,backgroundColor:'#378ADD',borderRadius:5,borderSkipped:false},
+      {label:l2,data:s2.repTots,backgroundColor:'rgba(55,138,221,.3)',borderRadius:5,borderSkipped:false,borderColor:'#378ADD',borderWidth:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}}}
+  });
+
+  destroyChart('cmp-tipo');
+  charts['cmp-tipo']=new Chart(document.getElementById('chart-cmp-tipo'),{
+    type:'bar',
+    data:{labels:[l1,l2],datasets:[
+      {label:'Comercial',data:[s1.com,s2.com],backgroundColor:'#378ADD',borderRadius:5,borderSkipped:false},
+      {label:'Operativo',data:[s1.op,s2.op],backgroundColor:'#1D9E75',borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}}}
+  });
+}
+
+loadData();
+renderSemanal();
+setInterval(loadAndRender, 30000);
+</script>
+</body>
+</html>

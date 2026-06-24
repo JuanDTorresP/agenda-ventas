@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de Proyecto — Agenda Comercial Digital</title>
+<style>
+  :root {
+    --blue: #378ADD; --blue-dk: #0C447C; --blue-lt: #E6F1FB;
+    --green: #1D9E75; --green-lt: #E1F5EE; --green-dk: #085041;
+    --amber: #BA7517; --amber-lt: #FAEEDA; --amber-dk: #633806;
+    --gray-50: #F7F7F5; --gray-100: #EDEDEA; --gray-400: #A0A09A;
+    --gray-600: #5F5E5A; --gray-900: #1A1A19; --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-50); color: var(--gray-900); padding-bottom: 4rem; }
+  .cover { background: var(--gray-900); color: #fff; padding: 3rem 2rem 2.5rem; }
+  .cover-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: .5rem; }
+  .cover h1 { font-size: 28px; font-weight: 800; margin-bottom: .4rem; }
+  .cover p { font-size: 14px; color: rgba(255,255,255,.6); max-width: 520px; }
+  .cover-meta { display: flex; gap: 1.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .cover-meta span { font-size: 12px; color: rgba(255,255,255,.5); }
+  .cover-meta b { color: rgba(255,255,255,.9); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
+  h2 { font-size: 18px; font-weight: 800; margin-bottom: 1.1rem; padding-bottom: .5rem; border-bottom: 2px solid var(--gray-100); }
+  h3 { font-size: 14px; font-weight: 700; margin-bottom: .5rem; }
+  p { font-size: 14px; line-height: 1.65; color: var(--gray-600); }
+
+  .section { margin-bottom: 2.5rem; }
+
+  .status-row { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .status-pill { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .pill-done { background: var(--green-lt); color: var(--green-dk); }
+  .pill-now { background: var(--blue-lt); color: var(--blue-dk); }
+  .pill-next { background: var(--gray-100); color: var(--gray-600); }
+
+  .phase-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); margin-bottom: .75rem; overflow: hidden; }
+  .phase-header { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; }
+  .phase-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+  .phase-title { font-size: 14px; font-weight: 700; }
+  .phase-time { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+  .phase-badge { margin-left: auto; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .phase-body { border-top: 1px solid var(--gray-100); padding: 1rem 1.25rem; }
+  .task-list { list-style: none; }
+  .task-list li { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; font-size: 13px; color: var(--gray-600); border-bottom: 1px solid var(--gray-100); }
+  .task-list li:last-child { border-bottom: none; }
+  .task-list li::before { content: '→'; color: var(--gray-400); flex-shrink: 0; margin-top: 1px; }
+  .task-done::before { content: '✓' !important; color: var(--green) !important; }
+  .task-done { text-decoration: line-through; color: var(--gray-400) !important; }
+
+  .entregable-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:600px){ .entregable-grid { grid-template-columns: 1fr; } }
+  .entregable { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+  .entregable-icon { font-size: 24px; margin-bottom: .6rem; }
+  .entregable h3 { margin-bottom: .3rem; }
+  .entregable p { font-size: 12px; }
+  .entregable-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-top: 8px; font-weight: 600; }
+
+  .alerta { background: var(--amber-lt); border: 1px solid rgba(186,117,23,.2); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; gap: 12px; align-items: flex-start; }
+  .alerta-icon { font-size: 20px; flex-shrink: 0; }
+  .alerta h3 { font-size: 13px; font-weight: 700; color: var(--amber-dk); margin-bottom: 3px; }
+  .alerta p { font-size: 13px; color: var(--amber-dk); }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; }
+  .kpi-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1rem; }
+  .kpi-n { font-size: 22px; font-weight: 800; }
+  .kpi-l { font-size: 12px; color: var(--gray-400); margin-top: 3px; }
+
+  .decision-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .decision-table th { background: var(--gray-50); font-weight: 700; text-align: left; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); }
+  .decision-table td { padding: 9px 12px; border-bottom: 1px solid var(--gray-100); color: var(--gray-600); vertical-align: top; }
+  .decision-table tr:last-child td { border-bottom: none; }
+  .decision-table td:first-child { font-weight: 600; color: var(--gray-900); }
+
+  .hosting-option { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1.1rem 1.25rem; margin-bottom: .75rem; display: flex; gap: 14px; align-items: flex-start; }
+  .hosting-option.recommended { border-color: var(--blue); }
+  .hosting-badge-rec { font-size: 10px; font-weight: 700; background: var(--blue-lt); color: var(--blue-dk); padding: 2px 7px; border-radius: 20px; margin-left: 8px; }
+  .opt-num { font-size: 20px; font-weight: 800; color: var(--gray-400); flex-shrink: 0; width: 32px; }
+  .opt-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .opt-desc { font-size: 12px; color: var(--gray-400); margin-bottom: 6px; }
+  .opt-steps { list-style: none; }
+  .opt-steps li { font-size: 12px; color: var(--gray-600); padding: 3px 0; border-bottom: 1px solid var(--gray-100); display: flex; gap: 6px; }
+  .opt-steps li:last-child { border-bottom: none; }
+  .opt-steps li::before { content: counter(li); counter-increment: li; font-weight: 700; color: var(--blue); min-width: 14px; }
+  .opt-steps { counter-reset: li; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-label">Plan de Proyecto</div>
+  <h1>Agenda Comercial Digital</h1>
+  <p>Implementación del sistema de registro de gestiones y dashboard para el equipo de ventas.</p>
+  <div class="cover-meta">
+    <span><b>Gerente de proyecto:</b> Claude (asistido por IA)</span>
+    <span><b>Equipo:</b> Patricia Lopera · Elizabeth Acosta · Ivan Muñoz · Clemencia Rodriguez</span>
+    <span><b>Estado:</b> Fase 1 completada ✓</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <h2>Estado actual del proyecto</h2>
+    <div class="status-row">
+      <span class="status-pill pill-done">✓ Fase 1 — Desarrollo completado</span>
+      <span class="status-pill pill-now">→ Fase 2 — Publicación en curso</span>
+      <span class="status-pill pill-next">◦ Fase 3 — Adopción del equipo</span>
+      <span class="status-pill pill-next">◦ Fase 4 — Optimización</span>
+    </div>
+    <p>Los dos archivos principales están listos y funcionales. El siguiente paso crítico es publicarlos en un servidor web para que todo el equipo acceda desde la misma URL.</p>
+  </div>
+
+  <div class="section">
+    <h2>Entregables generados</h2>
+    <div class="entregable-grid">
+      <div class="entregable">
+        <div class="entregable-icon">📋</div>
+        <h3>Formulario de representantes</h3>
+        <p>Página móvil-first donde cada representante registra sus gestiones. Validación en tiempo real, confirmación visual al guardar.</p>
+        <span class="entregable-tag" style="background:var(--blue-lt);color:var(--blue-dk)">formulario-representantes.html</span>
+      </div>
+      <div class="entregable">
+        <div class="entregable-icon">📊</div>
+        <h3>Dashboard gerencial</h3>
+        <p>Vista completa con semana actual, reporte mensual por semanas y comparación mes a mes por representante.</p>
+        <span class="entregable-tag" style="background:var(--green-lt);color:var(--green-dk)">dashboard.html</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Fases de implementación</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-num" style="background:var(--green-lt);color:var(--green-dk)">1</div>
+        <div><div class="phase-title">Desarrollo</div><div class="phase-time">Completado</div></div>
+        <span class="phase-badge" style="background:var(--green-lt);color:var(--green-dk)">✓ Listo</span>
+      </div>
+      <div class="phase-body">
+        <ul class="task-list">
+          <li class="task-done">Formulario de registro con menú de representantes</li>
+          <li class="task-done">Campos: ciudad, cuenta, oportunidad, tipo, fecha, hora, notas</li>
+          <li class="task-done">Dashboard con vista semanal — tarjetas por representante + gráfico diario</li>
+          <li class="task-done">Reporte mensual con navegación mes a mes</li>
+          <li class="task-done">Comparador mes a mes con indicadores de variación</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-num" style="background:var(--blue-lt);color:var(--blue-dk)">2</div>
+        <div><div class="phase-title">Publicación en la web</div><div class="phase-time">Esta semana — 1 hora de trabajo</div></div>
+        <span class="phase-badge" style="background:var(--blue-lt);color:var(--blue-dk)">→ Siguiente paso</span>
+      </div>
+      <div class="phase-body">
+        <p style="margin-bottom:.85rem;font-size:13px">Necesitas alojar los archivos en un servidor para que todo el equipo acceda desde sus celulares o computadores. Ver opciones de hosting abajo.</p>
+        <ul class="task-list">
+          <li>Elegir plataforma de hosting (ver opciones en sección siguiente)</li>
+          <li>Subir los 2 archivos HTML al servidor</li>
+          <li>Probar formulario desde celular y verificar que guarda</li>
+          <li>Probar dashboard y confirmar que refleja los datos</li>
+          <li>Anotar las URLs finales</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-num" style="background:var(--gray-100);color:var(--gray-600)">3</div>
+        <div><div class="phase-title">Lanzamiento con el equipo</div><div class="phase-time">Semana 1 — 30 minutos</div></div>
+        <span class="phase-badge" style="background:var(--gray-100);color:var(--gray-600)">◦ Pendiente</span>
+      </div>
+      <div class="phase-body">
+        <ul class="task-list">
+          <li>Compartir URL del formulario por WhatsApp al equipo</li>
+          <li>Pedirles que agreguen el formulario a la pantalla de inicio del celular</li>
+          <li>Hacer una gestión de prueba en conjunto para verificar que todos pueden registrar</li>
+          <li>Definir rutina: registrar cada gestión el mismo día que ocurre</li>
+          <li>Guardar la URL del dashboard solo para uso gerencial</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-num" style="background:var(--gray-100);color:var(--gray-600)">4</div>
+        <div><div class="phase-title">Seguimiento y optimización</div><div class="phase-time">Semanas 2–4</div></div>
+        <span class="phase-badge" style="background:var(--gray-100);color:var(--gray-600)">◦ Pendiente</span>
+      </div>
+      <div class="phase-body">
+        <ul class="task-list">
+          <li>Revisar el dashboard cada lunes en la reunión de equipo</li>
+          <li>Identificar representantes con baja actividad y hacer seguimiento</li>
+          <li>Analizar ratio Comercial/Operativo por representante</li>
+          <li>Comparar mes a mes para detectar tendencias</li>
+          <li>Solicitar mejoras según necesidades que surjan en el uso real</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Opciones de hosting — cómo publicarlo</h2>
+    <p style="margin-bottom:1rem">Estos son los tres caminos para publicar los archivos. No necesitas conocimientos técnicos para ninguno.</p>
+
+    <div class="hosting-option recommended">
+      <div class="opt-num">A</div>
+      <div style="flex:1">
+        <div class="opt-title">Google Drive + Vercel <span class="hosting-badge-rec">Recomendado</span></div>
+        <div class="opt-desc">Gratis, sin límites, URLs permanentes y acceso desde cualquier dispositivo.</div>
+        <ol class="opt-steps">
+          <li>Ve a <b>vercel.com</b> y crea una cuenta gratis con tu email de empresa</li>
+          <li>Haz clic en "Add New Project" → "Deploy from your computer"</li>
+          <li>Sube los 2 archivos HTML (formulario-representantes.html y dashboard.html)</li>
+          <li>Vercel te dará dos URLs como: <b>tu-empresa.vercel.app/formulario-representantes</b></li>
+          <li>Comparte la URL del formulario al equipo, guarda la del dashboard para ti</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="hosting-option">
+      <div class="opt-num">B</div>
+      <div style="flex:1">
+        <div class="opt-title">GitHub Pages</div>
+        <div class="opt-desc">Gratis, técnicamente simple con la interfaz web de GitHub.</div>
+        <ol class="opt-steps">
+          <li>Crea una cuenta en <b>github.com</b></li>
+          <li>Crea un repositorio nuevo, llámalo "agenda-ventas"</li>
+          <li>Sube los 2 archivos HTML desde la interfaz web (botón "Add file")</li>
+          <li>Ve a Settings → Pages → Source: selecciona "main branch"</li>
+          <li>Tu URL será: <b>tu-usuario.github.io/agenda-ventas/dashboard.html</b></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="hosting-option">
+      <div class="opt-num">C</div>
+      <div style="flex:1">
+        <div class="opt-title">Netlify Drop</div>
+        <div class="opt-desc">La opción más rápida: arrastra y suelta los archivos, en 1 minuto tienes una URL.</div>
+        <ol class="opt-steps">
+          <li>Ve a <b>app.netlify.com/drop</b> (no necesitas cuenta)</li>
+          <li>Crea una carpeta en tu computador con los 2 archivos HTML</li>
+          <li>Arrastra esa carpeta al área de drop de Netlify</li>
+          <li>En 30 segundos tendrás una URL como: <b>abc123.netlify.app</b></li>
+          <li>Nota: sin cuenta, el sitio expira en 24h — crea cuenta gratis para que sea permanente</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Punto crítico a entender</h2>
+    <div class="alerta">
+      <div class="alerta-icon">⚠️</div>
+      <div>
+        <h3>Los datos se guardan en el navegador de cada persona</h3>
+        <p>Actualmente, el formulario guarda los datos en el almacenamiento local del navegador (<b>localStorage</b>). Esto significa que los datos del formulario no se sincronizan automáticamente con el dashboard si están en computadores diferentes. Para que el sistema funcione en red real (varios dispositivos viendo los mismos datos), necesitas implementar <b>Fase 5: base de datos compartida</b>.</p>
+      </div>
+    </div>
+    <br>
+    <p>Mientras tanto, una solución simple: el representante y el gerente usan el mismo computador o navegador, o el gerente exporta los datos manualmente. Cuando el equipo esté adoptando bien el hábito, podemos conectar una base de datos gratuita (como Firebase o Supabase) para sincronización real entre dispositivos.</p>
+  </div>
+
+  <div class="section">
+    <h2>Métricas que puedes trackear desde el dashboard</h2>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-n" style="color:var(--blue)">% Comercial</div><div class="kpi-l">Qué tanto tiempo dedica cada uno a actividad comercial vs operativa</div></div>
+      <div class="kpi-card"><div class="kpi-n" style="color:var(--green)">Cuentas / semana</div><div class="kpi-l">Cuántas cuentas únicas visita cada representante por semana</div></div>
+      <div class="kpi-card"><div class="kpi-n">Gestiones / mes</div><div class="kpi-l">Volumen total de actividad y tendencia mes a mes</div></div>
+      <div class="kpi-card"><div class="kpi-n">Top cuentas</div><div class="kpi-l">Qué clientes reciben más atención y de qué tipo</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Decisiones pendientes</h2>
+    <table class="decision-table">
+      <thead><tr><th>Decisión</th><th>Opciones</th><th>Impacto</th></tr></thead>
+      <tbody>
+        <tr><td>Plataforma de hosting</td><td>Vercel / GitHub Pages / Netlify</td><td>Determina cuánto tarda en estar disponible</td></tr>
+        <tr><td>Sincronización de datos</td><td>localStorage (ya funciona) vs Firebase (requiere 2–3h adicionales)</td><td>Si el equipo trabaja desde distintos dispositivos, Firebase es necesario</td></tr>
+        <tr><td>Agregar metas semanales</td><td>Sí / No</td><td>Permitiría mostrar cumplimiento vs objetivo en el dashboard</td></tr>
+        <tr><td>Notificaciones</td><td>Sin notificaciones / Recordatorio diario por WhatsApp</td><td>Mejora la adopción del hábito de registro</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>
