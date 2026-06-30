@@ -147,6 +147,12 @@
   .agenda-main{flex:1;min-width:0}
   .agenda-cuenta{font-size:13px;font-weight:600;color:var(--gray-900)}
   .agenda-meta{font-size:11px;color:var(--gray-400);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .kpi.clickable{cursor:pointer;transition:box-shadow .15s,border-color .15s}
+  .kpi.clickable:hover{box-shadow:0 2px 10px rgba(0,0,0,.06);border-color:var(--gray-200)}
+  .kpi.clickable:after{content:'Ver detalle →';display:block;font-size:9px;color:var(--blue);margin-top:6px;font-weight:600;opacity:0;transition:opacity .15s}
+  .kpi.clickable:hover:after{opacity:1}
+  .mini.clickable{cursor:pointer;transition:background .15s}
+  .mini.clickable:hover{background:var(--gray-100)}
   .empty{text-align:center;padding:2.5rem;color:var(--gray-400);font-size:13px}
   .updated{font-size:11px;color:var(--gray-400);text-align:right;margin-top:.5rem}
 
@@ -386,6 +392,20 @@
   </div>
 </div>
 
+<!-- MODAL DETALLE DE MÉTRICA / CUENTAS -->
+<div class="modal-overlay" id="metric-modal" onclick="if(event.target===this) closeMetricDetail()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="mm-title"></div>
+        <div class="modal-sub" id="mm-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeMetricDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="mm-body"></div>
+  </div>
+</div>
+
 <script>
 const REPS = ['Patricia Lopera','Elizabeth Acosta','Ivan Muñoz','Clemencia Rodriguez'];
 const REP_BG = ['#E6F1FB','#E1F5EE','#EEEDFE','#FAECE7'];
@@ -466,28 +486,35 @@ function doughnutChart(id,labels,data,colors){
 function renderSemanal(){
   var wr=getWeekRange(); var repF=document.getElementById('sem-rep').value;
   var all=gestiones.filter(function(g){ return inRange(g.fecha,wr.mon,wr.sun)&&(!repF||g.rep===repF); });
-  var com=all.filter(function(g){ return g.tipo==='Comercial'; }).length;
-  var op=all.filter(function(g){ return g.tipo==='Operativo'; }).length;
-  var nuevos=all.filter(function(g){ return g.tipoCliente==='Nuevo'; }).length;
-  var exist=all.filter(function(g){ return g.tipoCliente==='Existente'; }).length;
+  var comArr=all.filter(function(g){ return g.tipo==='Comercial'; });
+  var opArr=all.filter(function(g){ return g.tipo==='Operativo'; });
+  var nuevosArr=all.filter(function(g){ return g.tipoCliente==='Nuevo'; });
+  var existArr=all.filter(function(g){ return g.tipoCliente==='Existente'; });
+  var com=comArr.length, op=opArr.length, nuevos=nuevosArr.length, exist=existArr.length;
   var cuentas=new Set(all.map(function(g){ return g.cuenta; })).size;
 
   document.getElementById('sem-sub').textContent=fmtShort(wr.mon)+' — '+fmtShort(wr.sun)+', '+wr.sun.getFullYear();
   document.getElementById('sem-kpis').innerHTML=
-    kpiHtml('Total gestiones',all.length,'esta semana','')+
-    kpiHtml('Comercial',com,Math.round(com/(all.length||1)*100)+'% del total','color:#185FA5')+
-    kpiHtml('Operativo',op,Math.round(op/(all.length||1)*100)+'% del total','color:#0F6E56')+
-    kpiHtml('Clientes nuevos',nuevos,'vs '+exist+' existentes','color:var(--amber)')+
-    kpiHtml('Cuentas únicas',cuentas,'visitadas','');
+    kpiHtml('Total gestiones',all.length,'esta semana','','sem-total',all)+
+    kpiHtml('Comercial',com,Math.round(com/(all.length||1)*100)+'% del total','color:#185FA5','sem-com',comArr)+
+    kpiHtml('Operativo',op,Math.round(op/(all.length||1)*100)+'% del total','color:#0F6E56','sem-op',opArr)+
+    kpiHtml('Clientes nuevos',nuevos,'vs '+exist+' existentes','color:var(--amber)','sem-nuevos',nuevosArr)+
+    kpiHtml('Cuentas únicas',cuentas,'visitadas, click para ver','','sem-cuentas',all);
 
   var repsShow=repF?REPS.filter(function(r){ return r===repF; }):REPS;
   document.getElementById('sem-rep-cards').innerHTML=repsShow.map(function(rep){
     var i=REPS.indexOf(rep);
     var rd=all.filter(function(g){ return g.rep===rep; });
-    var rc=rd.filter(function(g){ return g.tipo==='Comercial'; }).length;
-    var ro=rd.filter(function(g){ return g.tipo==='Operativo'; }).length;
-    var rn=rd.filter(function(g){ return g.tipoCliente==='Nuevo'; }).length;
-    var re=rd.filter(function(g){ return g.tipoCliente==='Existente'; }).length;
+    var rdCom=rd.filter(function(g){ return g.tipo==='Comercial'; });
+    var rdOp=rd.filter(function(g){ return g.tipo==='Operativo'; });
+    var rdNuevo=rd.filter(function(g){ return g.tipoCliente==='Nuevo'; });
+    var rdExist=rd.filter(function(g){ return g.tipoCliente==='Existente'; });
+    var rc=rdCom.length, ro=rdOp.length, rn=rdNuevo.length, re=rdExist.length;
+    metricDatasets['sem-rep-'+i+'-com']={title:rep+' · Comercial (semana)',arr:rdCom};
+    metricDatasets['sem-rep-'+i+'-op']={title:rep+' · Operativo (semana)',arr:rdOp};
+    metricDatasets['sem-rep-'+i+'-nuevo']={title:rep+' · Clientes nuevos (semana)',arr:rdNuevo};
+    metricDatasets['sem-rep-'+i+'-exist']={title:rep+' · Clientes existentes (semana)',arr:rdExist};
+    metricDatasets['sem-rep-'+i+'-tot']={title:rep+' · Todas las cuentas (semana)',arr:rd};
     var pct=rd.length?Math.round(rc/rd.length*100):0;
     var init=rep.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2);
     var last=rd[0];
@@ -495,10 +522,10 @@ function renderSemanal(){
       '<div class="rep-top"><div class="avatar" style="background:'+REP_BG[i]+';color:'+REP_TXT[i]+'">'+init+'</div>'+
       '<div><div class="rep-name">'+rep+'</div><div class="rep-count">'+rd.length+' gestión'+(rd.length!==1?'es':'')+' esta semana</div></div></div>'+
       '<div class="mini-row">'+
-        '<div class="mini"><div class="mini-n" style="color:#185FA5">'+rc+'</div><div class="mini-l">Comercial</div></div>'+
-        '<div class="mini"><div class="mini-n" style="color:#0F6E56">'+ro+'</div><div class="mini-l">Operativo</div></div>'+
-        '<div class="mini"><div class="mini-n" style="color:var(--amber)">'+rn+'</div><div class="mini-l">Nuevos</div></div>'+
-        '<div class="mini"><div class="mini-n" style="color:var(--purple)">'+re+'</div><div class="mini-l">Existentes</div></div>'+
+        '<div class="mini clickable" onclick="event.stopPropagation();openMetricDetail(\'sem-rep-'+i+'-com\')"><div class="mini-n" style="color:#185FA5">'+rc+'</div><div class="mini-l">Comercial</div></div>'+
+        '<div class="mini clickable" onclick="event.stopPropagation();openMetricDetail(\'sem-rep-'+i+'-op\')"><div class="mini-n" style="color:#0F6E56">'+ro+'</div><div class="mini-l">Operativo</div></div>'+
+        '<div class="mini clickable" onclick="event.stopPropagation();openMetricDetail(\'sem-rep-'+i+'-nuevo\')"><div class="mini-n" style="color:var(--amber)">'+rn+'</div><div class="mini-l">Nuevos</div></div>'+
+        '<div class="mini clickable" onclick="event.stopPropagation();openMetricDetail(\'sem-rep-'+i+'-exist\')"><div class="mini-n" style="color:var(--purple)">'+re+'</div><div class="mini-l">Existentes</div></div>'+
       '</div>'+
       '<div class="prog-bar"><div class="prog-inner" style="width:'+pct+'%;background:#378ADD"></div></div>'+
       '<div class="prog-labels"><span style="color:#185FA5">Comercial '+pct+'%</span><span style="color:#0F6E56">Operativo '+(100-pct)+'%</span></div>'+
@@ -527,18 +554,19 @@ function renderMensual(){
   var repF=document.getElementById('men-rep').value;
   var from=new Date(curYear,curMonth,1), to=new Date(curYear,curMonth+1,0,23,59,59);
   var data=gestiones.filter(function(g){ return inRange(g.fecha,from,to)&&(!repF||g.rep===repF); });
-  var com=data.filter(function(g){ return g.tipo==='Comercial'; }).length;
-  var op=data.filter(function(g){ return g.tipo==='Operativo'; }).length;
-  var nuevos=data.filter(function(g){ return g.tipoCliente==='Nuevo'; }).length;
-  var exist=data.filter(function(g){ return g.tipoCliente==='Existente'; }).length;
+  var comArr=data.filter(function(g){ return g.tipo==='Comercial'; });
+  var opArr=data.filter(function(g){ return g.tipo==='Operativo'; });
+  var nuevosArr=data.filter(function(g){ return g.tipoCliente==='Nuevo'; });
+  var existArr=data.filter(function(g){ return g.tipoCliente==='Existente'; });
+  var com=comArr.length, op=opArr.length, nuevos=nuevosArr.length, exist=existArr.length;
 
   document.getElementById('men-sub').textContent=label+' · '+data.length+' gestiones registradas';
   document.getElementById('men-kpis').innerHTML=
-    kpiHtml('Total',data.length,'gestiones','')+
-    kpiHtml('Comercial',com,Math.round(com/(data.length||1)*100)+'%','color:#185FA5')+
-    kpiHtml('Operativo',op,Math.round(op/(data.length||1)*100)+'%','color:#0F6E56')+
-    kpiHtml('Nuevos',nuevos,'clientes nuevos','color:var(--amber)')+
-    kpiHtml('Existentes',exist,'clientes existentes','color:var(--purple)');
+    kpiHtml('Total',data.length,'gestiones','','men-total',data)+
+    kpiHtml('Comercial',com,Math.round(com/(data.length||1)*100)+'%','color:#185FA5','men-com',comArr)+
+    kpiHtml('Operativo',op,Math.round(op/(data.length||1)*100)+'%','color:#0F6E56','men-op',opArr)+
+    kpiHtml('Nuevos',nuevos,'clientes nuevos','color:var(--amber)','men-nuevos',nuevosArr)+
+    kpiHtml('Existentes',exist,'clientes existentes','color:var(--purple)','men-exist',existArr);
 
   var sems=getWeeksOfMonth(curYear,curMonth);
   var semCom=sems.map(function(s){ return data.filter(function(g){ return inRange(g.fecha,s.ws,s.we)&&g.tipo==='Comercial'; }).length; });
@@ -598,16 +626,17 @@ function renderCuentas(){
   var data=filtrarRango(rango,'');
   if(tipoF) data=data.filter(function(g){ return g.tipoCliente===tipoF; });
 
-  var nuevos=data.filter(function(g){ return g.tipoCliente==='Nuevo'; }).length;
-  var exist=data.filter(function(g){ return g.tipoCliente==='Existente'; }).length;
+  var nuevosArr=data.filter(function(g){ return g.tipoCliente==='Nuevo'; });
+  var existArr=data.filter(function(g){ return g.tipoCliente==='Existente'; });
+  var nuevos=nuevosArr.length, exist=existArr.length;
   var cuentasUnicas=new Set(data.map(function(g){ return g.cuenta; })).size;
   var ciudades=new Set(data.map(function(g){ return g.ciudad; }).filter(Boolean)).size;
 
   document.getElementById('cta-kpis').innerHTML=
-    kpiHtml('Total gestiones',data.length,'','')+
-    kpiHtml('Clientes nuevos',nuevos,Math.round(nuevos/(data.length||1)*100)+'%','color:var(--amber)')+
-    kpiHtml('Clientes existentes',exist,Math.round(exist/(data.length||1)*100)+'%','color:var(--purple)')+
-    kpiHtml('Cuentas únicas',cuentasUnicas,'','')+
+    kpiHtml('Total gestiones',data.length,'','','cta-total',data)+
+    kpiHtml('Clientes nuevos',nuevos,Math.round(nuevos/(data.length||1)*100)+'%','color:var(--amber)','cta-nuevos',nuevosArr)+
+    kpiHtml('Clientes existentes',exist,Math.round(exist/(data.length||1)*100)+'%','color:var(--purple)','cta-exist',existArr)+
+    kpiHtml('Cuentas únicas',cuentasUnicas,'click para ver todas','','cta-cuentas',data)+
     kpiHtml('Ciudades',ciudades,'');
 
   doughnutChart('chart-cta-dona',['Nuevo','Existente'],[nuevos||0,exist||0],['#BA7517','#7F77DD']);
@@ -628,10 +657,12 @@ function renderCuentas(){
 
   document.getElementById('cta-tabla').innerHTML=sorted.length?
     '<table class="tbl"><thead><tr><th>Cuenta</th><th>Tipo</th><th>Gestiones</th><th>Etapa más frecuente</th></tr></thead><tbody>'+
-    sorted.map(function(s){
+    sorted.map(function(s,idx){
       var topEtapa=Object.keys(s.etapas).sort(function(a,b){ return s.etapas[b]-s.etapas[a]; })[0]||'—';
       var tipoLabel=s.nuevo>0&&s.exist===0?'<span class="badge badge-new">Nuevo</span>':s.exist>0&&s.nuevo===0?'<span class="badge badge-exist">Existente</span>':'<span class="badge badge-new">Nuevo</span> <span class="badge badge-exist">Existente</span>';
-      return '<tr><td>'+s.c+'</td><td>'+tipoLabel+'</td><td>'+s.tot+'</td><td>'+topEtapa+'</td></tr>';
+      var key='cta-cuenta-'+idx;
+      metricDatasets[key]={title:'Cuenta: '+s.c,arr:data.filter(function(g){ return g.cuenta===s.c; })};
+      return '<tr style="cursor:pointer" onclick="openMetricDetail(\''+key+'\')"><td>'+s.c+'</td><td>'+tipoLabel+'</td><td>'+s.tot+'</td><td>'+topEtapa+'</td></tr>';
     }).join('')+'</tbody></table>':
     '<div class="empty">Sin datos para mostrar</div>';
 }
@@ -717,11 +748,6 @@ function closeRepDetail(){
   currentRepDetail = null;
 }
 
-function etapaColor(etapa){
-  var idx = ETAPAS.indexOf(etapa);
-  return idx>-1 ? ETAPA_COLORS[idx] : 'var(--gray-400)';
-}
-
 function renderRepDetail(){
   if(!currentRepDetail) return;
   var rango = parseInt(document.getElementById('rm-rango').value);
@@ -789,15 +815,71 @@ function getWeeksOfMonth(y,m){
   return sems;
 }
 
-function kpiHtml(lbl,val,sub,style){
+let metricDatasets = {};
+function kpiHtml(lbl,val,sub,style,key,arr){
+  if(key && arr){
+    metricDatasets[key]={title:lbl,arr:arr};
+    return '<div class="kpi clickable" onclick="openMetricDetail(\''+key+'\')"><div class="kpi-lbl">'+lbl+'</div><div class="kpi-val" style="'+style+'">'+val+'</div>'+(sub?'<div class="kpi-sub">'+sub+'</div>':'')+'</div>';
+  }
   return '<div class="kpi"><div class="kpi-lbl">'+lbl+'</div><div class="kpi-val" style="'+style+'">'+val+'</div>'+(sub?'<div class="kpi-sub">'+sub+'</div>':'')+'</div>';
 }
 function cmpKpi(val,lbl,style){
   return '<div class="cmp-kpi"><div class="cmp-kpi-n" style="'+style+'">'+val+'</div><div class="cmp-kpi-l">'+lbl+'</div></div>';
 }
 
+function etapaColor(etapa){
+  var idx = ETAPAS.indexOf(etapa);
+  return idx>-1 ? ETAPA_COLORS[idx] : 'var(--gray-400)';
+}
+
+function closeMetricDetail(){
+  document.getElementById('metric-modal').classList.remove('open');
+}
+
+function openMetricDetail(key){
+  var d = metricDatasets[key];
+  if(!d) return;
+  var arr = d.arr;
+  document.getElementById('mm-title').textContent = d.title;
+  document.getElementById('mm-sub').textContent = arr.length+' gestión'+(arr.length!==1?'es':'')+' encontradas';
+  document.getElementById('metric-modal').classList.add('open');
+  if(!arr.length){
+    document.getElementById('mm-body').innerHTML = '<div class="empty">Sin gestiones para mostrar en este filtro</div>';
+    return;
+  }
+  var byCuenta={}, order=[];
+  arr.forEach(function(g){
+    var c=g.cuenta||'Sin cuenta';
+    if(!byCuenta[c]){ byCuenta[c]=[]; order.push(c); }
+    byCuenta[c].push(g);
+  });
+  order.sort(function(a,b){ return byCuenta[b].length-byCuenta[a].length; });
+  document.getElementById('mm-body').innerHTML = order.map(function(c){
+    var items=byCuenta[c].slice().sort(function(x,y){ return new Date(y.fecha+'T'+(y.hora||'00:00'))-new Date(x.fecha+'T'+(x.hora||'00:00')); });
+    return '<div class="day-group">'+
+      '<div class="day-group-hdr">'+c+'<span class="day-count">'+items.length+'</span></div>'+
+      items.map(function(g){
+        var etapa=g.etapaVenta||'—';
+        return '<div class="agenda-item">'+
+          '<span class="agenda-dot" style="background:'+etapaColor(g.etapaVenta)+'"></span>'+
+          '<div class="agenda-main">'+
+            '<div class="agenda-cuenta">'+(g.rep||'Sin rep')+'</div>'+
+            '<div class="agenda-meta">'+
+              '<span class="badge" style="background:'+etapaColor(g.etapaVenta)+'22;color:'+etapaColor(g.etapaVenta)+'">'+etapa+'</span>'+
+              '<span class="badge '+(g.tipo==='Comercial'?'badge-com':'badge-op')+'">'+(g.tipo||'')+'</span>'+
+              '<span class="badge '+(g.tipoCliente==='Nuevo'?'badge-new':'badge-exist')+'">'+(g.tipoCliente||'')+'</span>'+
+              '<span>📅 '+g.fecha+(g.hora?' · '+g.hora:'')+'</span>'+
+              (g.ciudad?'<span>📍 '+g.ciudad+'</span>':'')+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';
+  }).join('');
+}
+
 /* ===================== INIT ===================== */
-document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeRepDetail(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeRepDetail(); closeMetricDetail(); } });
 loadData(function(){ renderSemanal(); });
 setInterval(loadAndRender, 30000);
 </script>
