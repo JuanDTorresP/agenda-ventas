@@ -122,6 +122,31 @@
   .badge-new{background:var(--amber-lt);color:var(--amber)}
   .badge-exist{background:var(--purple-lt);color:var(--purple-dk)}
 
+  /* REP CARD CLICKABLE */
+  .rep-card{cursor:pointer;transition:box-shadow .15s,border-color .15s}
+  .rep-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.06);border-color:var(--gray-200)}
+  .rep-card-hint{font-size:10px;color:var(--gray-400);margin-top:8px;text-align:center}
+
+  /* MODAL DETALLE REP */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,18,.5);z-index:50;align-items:flex-start;justify-content:center;padding:3vh 1rem;overflow-y:auto}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;border-radius:var(--radius);max-width:640px;width:100%;max-height:94vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .modal-head{display:flex;align-items:center;gap:12px;padding:1.1rem 1.25rem;border-bottom:1px solid var(--gray-100);position:sticky;top:0;background:#fff;border-radius:var(--radius) var(--radius) 0 0}
+  .modal-head .avatar{width:42px;height:42px;font-size:14px}
+  .modal-title{font-size:15px;font-weight:700}
+  .modal-sub{font-size:12px;color:var(--gray-400);margin-top:1px}
+  .modal-close{margin-left:auto;background:var(--gray-50);border:none;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;color:var(--gray-600);flex-shrink:0}
+  .modal-close:hover{background:var(--gray-100)}
+  .modal-controls{display:flex;gap:8px;padding:.85rem 1.25rem 0}
+  .modal-body{padding:.75rem 1.25rem 1.25rem}
+  .day-group{margin-bottom:1rem}
+  .day-group-hdr{font-size:12px;font-weight:700;color:var(--gray-600);padding:6px 0;display:flex;align-items:center;gap:8px}
+  .day-group-hdr .day-count{font-size:10px;font-weight:600;color:#fff;background:var(--gray-400);border-radius:20px;padding:1px 7px}
+  .agenda-item{background:var(--gray-50);border-radius:var(--radius-sm);padding:.6rem .75rem;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px}
+  .agenda-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .agenda-main{flex:1;min-width:0}
+  .agenda-cuenta{font-size:13px;font-weight:600;color:var(--gray-900)}
+  .agenda-meta{font-size:11px;color:var(--gray-400);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .empty{text-align:center;padding:2.5rem;color:var(--gray-400);font-size:13px}
   .updated{font-size:11px;color:var(--gray-400);text-align:right;margin-top:.5rem}
 
@@ -338,6 +363,29 @@
 
 </main>
 
+<!-- MODAL DETALLE DE REPRESENTANTE -->
+<div class="modal-overlay" id="rep-modal" onclick="if(event.target===this) closeRepDetail()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="avatar" id="rm-avatar"></div>
+      <div>
+        <div class="modal-title" id="rm-name"></div>
+        <div class="modal-sub" id="rm-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeRepDetail()">✕</button>
+    </div>
+    <div class="modal-controls">
+      <select class="ctrl" id="rm-rango" onchange="renderRepDetail()">
+        <option value="7">Últimos 7 días</option>
+        <option value="30" selected>Últimos 30 días</option>
+        <option value="90">Últimos 90 días</option>
+        <option value="0">Todo el tiempo</option>
+      </select>
+    </div>
+    <div class="modal-body" id="rm-body"></div>
+  </div>
+</div>
+
 <script>
 const REPS = ['Patricia Lopera','Elizabeth Acosta','Ivan Muñoz','Clemencia Rodriguez'];
 const REP_BG = ['#E6F1FB','#E1F5EE','#EEEDFE','#FAECE7'];
@@ -443,7 +491,7 @@ function renderSemanal(){
     var pct=rd.length?Math.round(rc/rd.length*100):0;
     var init=rep.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2);
     var last=rd[0];
-    return '<div class="rep-card">'+
+    return '<div class="rep-card" onclick="openRepDetail(\''+rep.replace(/'/g,"\\'")+'\')">'+
       '<div class="rep-top"><div class="avatar" style="background:'+REP_BG[i]+';color:'+REP_TXT[i]+'">'+init+'</div>'+
       '<div><div class="rep-name">'+rep+'</div><div class="rep-count">'+rd.length+' gestión'+(rd.length!==1?'es':'')+' esta semana</div></div></div>'+
       '<div class="mini-row">'+
@@ -455,6 +503,7 @@ function renderSemanal(){
       '<div class="prog-bar"><div class="prog-inner" style="width:'+pct+'%;background:#378ADD"></div></div>'+
       '<div class="prog-labels"><span style="color:#185FA5">Comercial '+pct+'%</span><span style="color:#0F6E56">Operativo '+(100-pct)+'%</span></div>'+
       (last?'<div class="last-v">Última: <b>'+last.cuenta+'</b> · '+last.fecha+(last.hora?' · '+last.hora:'')+'</div>':'<div class="last-v" style="color:var(--gray-200)">Sin registros esta semana</div>')+
+      '<div class="rep-card-hint">👁 Click para ver su agenda diaria</div>'+
       '</div>';
   }).join('');
 
@@ -648,7 +697,79 @@ function renderComparar(){
   barChart('chart-cmp-clientes',REPS.map(function(r){ return r.split(' ')[0]; }),[{label:l1+' Nuevos',data:s1.repNuevos,backgroundColor:'#BA7517',borderRadius:4,borderSkipped:false},{label:l2+' Nuevos',data:s2.repNuevos,backgroundColor:'rgba(186,117,23,.3)',borderRadius:4,borderSkipped:false,borderColor:'#BA7517',borderWidth:1}]);
 }
 
-/* ===================== HELPERS ===================== */
+/* ===================== DETALLE DE REPRESENTANTE (CUENTA/OPORTUNIDAD POR DÍA) ===================== */
+let currentRepDetail = null;
+
+function openRepDetail(rep){
+  currentRepDetail = rep;
+  var i = REPS.indexOf(rep);
+  var init = rep.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2);
+  document.getElementById('rm-avatar').textContent = init;
+  document.getElementById('rm-avatar').style.background = REP_BG[i] || 'var(--gray-100)';
+  document.getElementById('rm-avatar').style.color = REP_TXT[i] || 'var(--gray-600)';
+  document.getElementById('rm-name').textContent = rep;
+  document.getElementById('rep-modal').classList.add('open');
+  renderRepDetail();
+}
+
+function closeRepDetail(){
+  document.getElementById('rep-modal').classList.remove('open');
+  currentRepDetail = null;
+}
+
+function etapaColor(etapa){
+  var idx = ETAPAS.indexOf(etapa);
+  return idx>-1 ? ETAPA_COLORS[idx] : 'var(--gray-400)';
+}
+
+function renderRepDetail(){
+  if(!currentRepDetail) return;
+  var rango = parseInt(document.getElementById('rm-rango').value);
+  var data = filtrarRango(rango, currentRepDetail);
+  data = data.slice().sort(function(a,b){ return new Date(b.fecha+'T'+(b.hora||'00:00'))-new Date(a.fecha+'T'+(a.hora||'00:00')); });
+
+  document.getElementById('rm-sub').textContent = data.length+' gestión'+(data.length!==1?'es':'')+' registradas en el período';
+
+  if(!data.length){
+    document.getElementById('rm-body').innerHTML = '<div class="empty">Sin gestiones registradas en este período</div>';
+    return;
+  }
+
+  var byDay = {};
+  var order = [];
+  data.forEach(function(g){
+    if(!byDay[g.fecha]){ byDay[g.fecha]=[]; order.push(g.fecha); }
+    byDay[g.fecha].push(g);
+  });
+
+  document.getElementById('rm-body').innerHTML = order.map(function(fecha){
+    var items = byDay[fecha];
+    var d = new Date(fecha+'T00:00:00');
+    var diaLbl = d.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+    diaLbl = diaLbl.charAt(0).toUpperCase()+diaLbl.slice(1);
+    return '<div class="day-group">'+
+      '<div class="day-group-hdr">'+diaLbl+'<span class="day-count">'+items.length+'</span></div>'+
+      items.map(function(g){
+        var etapa = g.etapaVenta || '—';
+        return '<div class="agenda-item">'+
+          '<span class="agenda-dot" style="background:'+etapaColor(g.etapaVenta)+'"></span>'+
+          '<div class="agenda-main">'+
+            '<div class="agenda-cuenta">'+(g.cuenta||'Sin cuenta')+'</div>'+
+            '<div class="agenda-meta">'+
+              '<span class="badge" style="background:'+etapaColor(g.etapaVenta)+'22;color:'+etapaColor(g.etapaVenta)+'">'+etapa+'</span>'+
+              '<span class="badge '+(g.tipo==='Comercial'?'badge-com':'badge-op')+'">'+(g.tipo||'')+'</span>'+
+              '<span class="badge '+(g.tipoCliente==='Nuevo'?'badge-new':'badge-exist')+'">'+(g.tipoCliente||'')+'</span>'+
+              (g.hora?'<span>🕒 '+g.hora+'</span>':'')+
+              (g.ciudad?'<span>📍 '+g.ciudad+'</span>':'')+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';
+  }).join('');
+}
+
+
 function filtrarRango(rango,repF){
   var data=gestiones.filter(function(g){ return !repF||g.rep===repF; });
   if(rango>0){
@@ -676,6 +797,7 @@ function cmpKpi(val,lbl,style){
 }
 
 /* ===================== INIT ===================== */
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeRepDetail(); });
 loadData(function(){ renderSemanal(); });
 setInterval(loadAndRender, 30000);
 </script>
